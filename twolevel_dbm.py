@@ -209,172 +209,157 @@ def secondlevel(inputs, args, secondlevel=False):
     # Loop over input file warp fields to produce delin
     jacobians = list()
     for i, subject in enumerate(input_images, start=0):
+        subjectname = pathlib.Path(subject).name.rsplit('.nii')[0]
+        print(f"Processing subject {subject} DBM outputs")
         # Compute delin
         run_command(
             "ANTSUseDeformationFieldToGetAffineTransform output/secondlevel/secondlevel_{1}{0}1InverseWarp.nii.gz 0.25 "
-            "affine output/compositewarps/secondlevel_{1}_delin.mat output/secondlevel/secondlevel_otsumask.nii.gz".
-            format(i,
-                   pathlib.Path(subject).name.split('.nii.gz')[0]),
-            args.dry_run)
+            "affine output/compositewarps/secondlevel_{1}_delin.mat output/secondlevel/secondlevel_otsumask.nii.gz".format(
+                i, subjectname), args.dry_run)
         # Remove the rigid components
         run_command(
-            "AverageAffineTransformNoRigid 3 output/compositewarps/secondlevel_{0}_delin.mat output/compositewarps/secondlevel_{0}_delin.mat output/compositewarps/secondlevel_{0}_delin.mat".
-            format(pathlib.Path(subject).name.split('.nii.gz')[0]),
+            "AverageAffineTransformNoRigid 3 output/compositewarps/secondlevel_{0}_delin.mat output/compositewarps/secondlevel_{0}_delin.mat output/compositewarps/secondlevel_{0}_delin.mat".format(
+                subjectname),
             args.dry_run)
         # Apply delin to create composite relative
         run_command(
             "antsApplyTransforms -d 3 -t output/secondlevel/secondlevel_{1}{0}1InverseWarp.nii.gz -t [output/compositewarps/secondlevel_{1}_delin.mat,1] "
-            "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel_{1}_relative.nii.gz,1] ".
-            format(i,
-                   pathlib.Path(subject).name.split('.nii.gz')[0]),
-            args.dry_run)
+            "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel_{1}_relative.nii.gz,1] ".format(
+                i, subjectname), args.dry_run)
         # Remove rigid component of affine
         run_command(
-            "AverageAffineTransformNoRigid 3 output/secondlevel/secondlevel_{1}{0}0GenericAffine_norigid.mat output/secondlevel/secondlevel_{1}{0}0GenericAffine.mat output/secondlevel/secondlevel_{1}{0}0GenericAffine.mat".
-            format(i,
-                   pathlib.Path(subject).name.split('.nii.gz')[0]),
+            "AverageAffineTransformNoRigid 3 output/secondlevel/secondlevel_{1}{0}0GenericAffine_norigid.mat output/secondlevel/secondlevel_{1}{0}0GenericAffine.mat output/secondlevel/secondlevel_{1}{0}0GenericAffine.mat".format(
+                i,
+                subjectname),
             args.dry_run)
         # Create composite of absolute
         run_command(
             "antsApplyTransforms -d 3 -t [output/secondlevel/secondlevel_{1}{0}0GenericAffine_norigid.mat,1] -t output/secondlevel/secondlevel_{1}{0}1InverseWarp.nii.gz "
-            "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel_{1}_absolute.nii.gz,1] ".
-            format(i,
-                   pathlib.Path(subject).name.split('.nii.gz')[0]),
+            "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel_{1}_absolute.nii.gz,1] ".format(
+                i, subjectname), args.dry_run)
+        run_command(
+            "CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel_{0}_relative.nii.gz output/jacobians/overall/secondlevel_{0}_relative.nii.gz 1 1".format(
+                subjectname),
             args.dry_run)
         run_command(
-            "CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel_{0}_relative.nii.gz output/jacobians/overall/secondlevel_{0}_relative.nii.gz 1 1".
-            format(pathlib.Path(subject).name.split('.nii.gz')[0]),
-            args.dry_run)
-        run_command(
-            "CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel_{0}_absolute.nii.gz output/jacobians/overall/secondlevel_{0}_absolute.nii.gz 1 1".
-            format(pathlib.Path(subject).name.split('.nii.gz')[0]),
+            "CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel_{0}_absolute.nii.gz output/jacobians/overall/secondlevel_{0}_absolute.nii.gz 1 1".format(
+                subjectname),
             args.dry_run)
         jacobians.append(
             "output/jacobians/overall/secondlevel_{}_relative.nii.gz".format(
-                pathlib.Path(subject).name.split('.nii.gz')[0]))
+                subjectname))
         jacobians.append(
             "output/jacobians/overall/secondlevel_{}_absolute.nii.gz".format(
-                pathlib.Path(subject).name.split('.nii.gz')[0]))
+                subjectname))
 
     if secondlevel:
         for subject, row in enumerate([line[:-1] for line in inputs], start=0):
-            #Make a mask per subject
+            # Make a mask per subject
             run_command(
                 "ThresholdImage 3 output/subject{0}/subject{0}_template0.nii.gz output/subject{0}/subject{0}_otsumask.nii.gz Otsu 1".
                 format(subject), args.dry_run)
             for i, scan in enumerate(row, start=0):
+                scanname = pathlib.Path(scan).name.rsplit('.nii')[0]
+                print(f"Processing scan {scanname}")
                 # Estimate affine residual from nonlinear
                 run_command(
                     "ANTSUseDeformationFieldToGetAffineTransform output/subject{0}/subject{0}_{2}{1}1InverseWarp.nii.gz 0.25 "
-                    "affine output/compositewarps/subject{0}_{2}_delin.mat output/subject{0}/subject{0}_otsumask.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "affine output/compositewarps/subject{0}_{2}_delin.mat output/subject{0}/subject{0}_otsumask.nii.gz".format(
+                        subject, i, scanname), args.dry_run)
                 # Remove the rigid component from the affine
                 run_command(
-                    "AverageAffineTransformNoRigid 3 output/compositewarps/subject{0}_{2}_delin.mat output/compositewarps/subject{0}_{2}_delin.mat output/compositewarps/subject{0}_{2}_delin.mat".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
+                    "AverageAffineTransformNoRigid 3 output/compositewarps/subject{0}_{2}_delin.mat output/compositewarps/subject{0}_{2}_delin.mat output/compositewarps/subject{0}_{2}_delin.mat".format(
+                        subject,
+                        i,
+                        scanname),
                     args.dry_run)
-                # Create composite nonlinear field using the affine to remove affine residuals
+                # Create composite nonlinear field using the affine to remove
+                # affine residuals
                 run_command(
                     "antsApplyTransforms -d 3 -t output/subject{0}/subject{0}_{2}{1}1InverseWarp.nii.gz -t [output/compositewarps/subject{0}_{2}_delin.mat,1] "
-                    "-r output/subject{0}/subject{0}_template0.nii.gz --verbose -o [output/compositewarps/subject{0}_{2}_relative.nii.gz,1] ".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "-r output/subject{0}/subject{0}_template0.nii.gz --verbose -o [output/compositewarps/subject{0}_{2}_relative.nii.gz,1] ".format(
+                        subject, i, scanname), args.dry_run)
                 # Remove rigid from absolute affine
                 run_command(
-                    "AverageAffineTransformNoRigid 3 output/subject{0}/subject{0}_{2}{1}0GenericAffine_norigid.mat output/subject{0}/subject{0}_{2}{1}0GenericAffine.mat output/subject{0}/subject{0}_{2}{1}0GenericAffine.mat".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
+                    "AverageAffineTransformNoRigid 3 output/subject{0}/subject{0}_{2}{1}0GenericAffine_norigid.mat output/subject{0}/subject{0}_{2}{1}0GenericAffine.mat output/subject{0}/subject{0}_{2}{1}0GenericAffine.mat".format(
+                        subject,
+                        i,
+                        scanname),
                     args.dry_run)
                 # Create composite absoloute warp
                 run_command(
                     "antsApplyTransforms -d 3 -t [output/subject{0}/subject{0}_{2}{1}0GenericAffine_norigid.mat,1] -t output/subject{0}/subject{0}_{2}{1}1InverseWarp.nii.gz "
-                    "-r output/subject{0}/subject{0}_template0.nii.gz --verbose -o [output/compositewarps/subject{0}_{2}_absolute.nii.gz,1]".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "-r output/subject{0}/subject{0}_template0.nii.gz --verbose -o [output/compositewarps/subject{0}_{2}_absolute.nii.gz,1]".format(
+                        subject, i, scanname), args.dry_run)
                 # Resample composite fields into common space
                 run_command(
                     "antsApplyTransforms -d 3 -e 1 -i output/compositewarps/subject{0}_{2}_relative.nii.gz -t output/secondlevel/secondlevel_subject{0}_template0{0}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{0}_template0{0}0GenericAffine.mat "
-                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/compositewarps/subject{0}_{2}_relative_commonspace.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/compositewarps/subject{0}_{2}_relative_commonspace.nii.gz".format(
+                        subject, i, scanname), args.dry_run)
                 run_command(
                     "antsApplyTransforms -d 3 -e 1 -i output/compositewarps/subject{0}_{2}_absolute.nii.gz -t output/secondlevel/secondlevel_subject{0}_template0{0}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{0}_template0{0}0GenericAffine.mat "
-                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/compositewarps/subject{0}_{2}_absolute_commonspace.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/compositewarps/subject{0}_{2}_absolute_commonspace.nii.gz".format(
+                        subject, i, scanname), args.dry_run)
                 # Create composite fields of overall transform
                 run_command(
                     "antsApplyTransforms -d 3 -t output/compositewarps/subject{0}_{2}_relative_commonspace.nii.gz -t output/compositewarps/secondlevel_subject{1}_template0_relative.nii.gz "
-                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/subject{0}_{2}_relative_commonspace_overall.nii.gz,1]".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/subject{0}_{2}_relative_commonspace_overall.nii.gz,1]".format(
+                        subject, i, scanname), args.dry_run)
                 run_command(
                     "antsApplyTransforms -d 3 -t output/compositewarps/subject{0}_{2}_absolute_commonspace.nii.gz -t output/compositewarps/secondlevel_subject{1}_template0_absolute.nii.gz "
-                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/subject{0}_{2}_absolute_commonspace_overall.nii.gz,1]".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/subject{0}_{2}_absolute_commonspace_overall.nii.gz,1]".format(
+                        subject, i, scanname), args.dry_run)
                 # Create jacobians of overall composite warp fields
                 run_command(
-                    "CreateJacobianDeterminantImage 3 output/compositewarps/subject{0}_{2}_relative_commonspace_overall.nii.gz output/jacobians/overall/subject{0}_{2}_relative.nii.gz 1 1".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
+                    "CreateJacobianDeterminantImage 3 output/compositewarps/subject{0}_{2}_relative_commonspace_overall.nii.gz output/jacobians/overall/subject{0}_{2}_relative.nii.gz 1 1".format(
+                        subject,
+                        i,
+                        scanname),
                     args.dry_run)
                 run_command(
-                    "CreateJacobianDeterminantImage 3 output/compositewarps/subject{0}_{2}_absolute_commonspace_overall.nii.gz output/jacobians/overall/subject{0}_{2}_absolute.nii.gz 1 1".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
+                    "CreateJacobianDeterminantImage 3 output/compositewarps/subject{0}_{2}_absolute_commonspace_overall.nii.gz output/jacobians/overall/subject{0}_{2}_absolute.nii.gz 1 1".format(
+                        subject,
+                        i,
+                        scanname),
                     args.dry_run)
                 jacobians.append(
-                    "output/jacobians/overall/subject{0}_{2}_relative.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]))
+                    "output/jacobians/overall/subject{0}_{2}_relative.nii.gz".format(subject, i,
+                                                                                     scanname))
                 jacobians.append(
-                    "output/jacobians/overall/subject{0}_{2}_absolute.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]))
-                #Create jacobian images from two composite fields in subject space
+                    "output/jacobians/overall/subject{0}_{2}_absolute.nii.gz".format(subject, i,
+                                                                                     scanname))
+                # Create jacobian images from two composite fields in subject
+                # space
                 run_command(
-                    "CreateJacobianDeterminantImage 3 output/compositewarps/subject{0}_{2}_relative.nii.gz output/jacobians/subject{0}_{2}_relative.nii.gz 1 1".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
+                    "CreateJacobianDeterminantImage 3 output/compositewarps/subject{0}_{2}_relative.nii.gz output/jacobians/subject{0}_{2}_relative.nii.gz 1 1".format(
+                        subject,
+                        i,
+                        scanname),
                     args.dry_run)
                 run_command(
-                    "CreateJacobianDeterminantImage 3 output/compositewarps/subject{0}_{2}_absolute.nii.gz output/jacobians/subject{0}_{2}_absolute.nii.gz 1 1".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
+                    "CreateJacobianDeterminantImage 3 output/compositewarps/subject{0}_{2}_absolute.nii.gz output/jacobians/subject{0}_{2}_absolute.nii.gz 1 1".format(
+                        subject,
+                        i,
+                        scanname),
                     args.dry_run)
-                #Resample jacobian to common space
+                # Resample jacobian to common space
                 run_command(
                     "antsApplyTransforms -d 3 -i output/jacobians/subject{0}_{2}_relative.nii.gz -t output/secondlevel/secondlevel_subject{0}_template0{0}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{0}_template0{0}0GenericAffine.mat "
-                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/jacobians/resampled/subject{0}_{2}_relative.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/jacobians/resampled/subject{0}_{2}_relative.nii.gz".format(
+                        subject, i, scanname), args.dry_run)
                 run_command(
                     "antsApplyTransforms -d 3 -i output/jacobians/subject{0}_{2}_absolute.nii.gz -t output/secondlevel/secondlevel_subject{0}_template0{0}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{0}_template0{0}0GenericAffine.mat "
-                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/jacobians/resampled/subject{0}_{2}_absolute.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]),
-                    args.dry_run)
+                    "-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/jacobians/resampled/subject{0}_{2}_absolute.nii.gz".format(
+                        subject, i, scanname), args.dry_run)
                 # Append jacobians to list
                 jacobians.append(
-                    "output/jacobians/resampled/subject{0}_{2}_relative.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]))
+                    "output/jacobians/resampled/subject{0}_{2}_relative.nii.gz".format(subject, i,
+                                                                                       scanname))
                 jacobians.append(
-                    "output/jacobians/resampled/subject{0}_{2}_absolute.nii.gz".
-                    format(subject, i,
-                           pathlib.Path(scan).name.split('.nii.gz')[0]))
-
+                    "output/jacobians/resampled/subject{0}_{2}_absolute.nii.gz".format(subject, i,
+                                                                                       scanname))
+    #outputs = []
+    #outputs.append(["overall_jacobian", "relative_jacobian", "blur", "grouping", "input_file"])
     for jacobian in jacobians:
         for blur in args.jacobian_sigmas:
             run_command(
