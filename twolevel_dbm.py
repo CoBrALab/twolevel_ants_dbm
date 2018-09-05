@@ -429,8 +429,7 @@ def main():
     parser.add_argument(
         '--dry-run',
         action='store_true',
-        help="""Don't run commands, instead
-        print to stdout""")
+        help="Don't run commands, instead print to stdout")
     parser.add_argument(
         "type",
         choices=['1level', '2level'],
@@ -443,13 +442,12 @@ def main():
         '--no-N4',
         action=BooleanAction,
         dest='N4',
-        default=True,
-        help="""Run N4BiasFieldCorrection during model build on input files""")
+        default=False,
+        help="Run N4BiasFieldCorrection during model build on input files.")
     advanced.add_argument(
         '--metric',
         default="CC[4]",
-        help="""Specify metric used
-        for non-linear template stages""")
+        help="Specify metric used for non-linear template stages")
     advanced.add_argument(
         '--transform',
         default="SyN",
@@ -457,53 +455,47 @@ def main():
             'SyN', 'BSplineSyN', 'TimeVaryingVelocityField',
             'TimeVaryingBSplineVelocityField', 'Affine', 'Rigid'
         ],
-        help="""Transformation type used during model build""")
+        help="Transformation type used during model build")
     advanced.add_argument(
         '--reg-iterations',
         default="100x100x70x20",
-        help="""Max iterations
-        for non-linear stages""")
+        help="Max iterations for non-linear stages")
     advanced.add_argument(
         '--reg-smoothing',
         default="3x2x1x0",
-        help="""Smoothing sigmas for
-        non-linear stages""")
+        help="Smoothing sigmas for non-linear stages")
     advanced.add_argument(
         '--reg-shrinks',
         default="6x4x2x1",
-        help="""Shrink factors for
-        non-linear stages""")
+        help="Shrink factors for non-linear stages")
     advanced.add_argument(
         '--float',
         '--no-float',
         action=BooleanAction,
         dest='float',
         default=True,
-        help=
-        """Run registration with float (32 bit) or double (64 bit) values""")
+        help="Run registration with float (32 bit) or double (64 bit) values")
     advanced.add_argument(
-        '--average-type',
-        default='normmean',
+        '--average-type', default='normmean',
         choices=['mean', 'normmean', 'median'],
-        help=
-        """Type of average used during model build, default normalized mean""")
+        help="Type of average used during model build, default normalized mean")
     advanced.add_argument(
         '--gradient-step',
         default=0.25,
         type=float,
-        help="""Gradient step size at each iteration during model build""")
+        help="Gradient step size at each iteration during model build")
     advanced.add_argument(
         '--model-iterations',
         default=3,
         type=int,
-        help="""How many registration and average rounds to do""")
+        help="How many registration and average rounds to do")
 
     cluster = parser.add_argument_group('cluster options')
     cluster.add_argument(
         '--cluster-type',
         default="local",
         choices=["local", "sge", "pbs", "slurm"],
-        help="""Choose the type of cluster system to submit jobs to""")
+        help="Choose the type of cluster system to submit jobs to")
     cluster.add_argument(
         '--walltime',
         default="20:00:00",
@@ -519,8 +511,7 @@ def main():
         '-j',
         type=int,
         default=multiprocessing.cpu_count(),
-        help=
-        """For local execution, how many subject-wise modelbuilds to run in parallel,
+        help="""For local execution, how many subject-wise modelbuilds to run in parallel,
         defaults to number of CPUs""")
 
     args = parser.parse_args()
