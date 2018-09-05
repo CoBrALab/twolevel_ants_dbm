@@ -526,11 +526,12 @@ def main():
             args.reg_shrinks.split('x')) == len(
                 args.reg_smoothing.split('x')))):
         sys.exit(
-            "twolevel_dbm.py error: iterations, shrinks and smoothing do not match in length"
+            "twolevel_dbm.py error: iterations, shrinks and smoothing do "
+            "not match in length"
         )
 
-    #if not which("antsMultivariateTemplateConstruction2.sh"):
-    #    sys.exit("antsMultivariateTemplateConstruction2.sh command not found")
+    if not which("antsMultivariateTemplateConstruction2.sh"):
+        sys.exit("antsMultivariateTemplateConstruction2.sh command not found")
 
     inputs = read_csv(args.input)
     setup_and_check_inputs(inputs, args)
