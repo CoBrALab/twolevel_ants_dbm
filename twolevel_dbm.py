@@ -12,18 +12,25 @@ import pathos.multiprocessing as multiprocessing  # Better multiprocessing
 import tqdm  # Progress bar
 
 
-def run_command(command, dryrun):
+def is_non_zero_file(fpath):
+    return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
+
+
+def run_command(command, dryrun, verbose=False):
     if dryrun:
         print(command)
         fakereturn = subprocess.CompletedProcess
         fakereturn.stdout = "".encode()
         return (fakereturn)
     else:
+        if verbose:
+            print(f"twolevel_dbm.py: running command {command}")
         result = subprocess.run(
-            shlex.split(command),
+            command,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            check=True)
+            check=True,
+            shell=True)
         return (result)
 
 
@@ -63,11 +70,12 @@ def which(program):
 
 def setup_and_check_inputs(inputs, args):
     # Check every file is accessible
-
     for row in inputs:
         for file in row:
-            if (not os.path.isfile(file)):
-                sys.exit("twolevel_dbm error: File {} does ".format(file))
+            if (not is_non_zero_file(file)):
+                sys.exit(f"twolevel_dbm error: File {file} does "
+                         + "not exist or is zero size")
+
     # Find minimum resolution of input files unless blurs are set, or rigid
     # model is provided
     if (not args.jacobian_sigmas):
@@ -112,77 +120,84 @@ def firstlevel(inputs, args):
     commands = list()
     imagelist = list()
     for i, subject in enumerate(inputs, start=0):
-        # Base command
-        command = """my-antsMultivariateTemplateConstruction2.sh -d 3 """
-        # Setup directory and naming
-        command += """-o output/subject{}/subject{}_ """.format(i, i)
-        # Defaults to bootstrap modelbuilds with rigid prealignmnet, no rigid
-        # update
-        command += """-r 1 -l 1 -y 0 """
-        # Model build setup
-        command += """-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} """.format(
-            args.cluster_type, args.average_type, args.float,
-            args.gradient_step, args.model_iterations, int(args.N4),
-            args.metric, args.transform)
-        # Registrations Setup
-        command += """-q {} -f {} -s {} """.format(
-            args.reg_iterations, args.reg_shrinks, args.reg_smoothing)
-        command += " ".join(subject)
-        commands.append(command)
+        if not is_non_zero_file("output/subject{}/COMPLETE".format(i)):
+            # Base command
+            command = "antsMultivariateTemplateConstruction2.sh -d 3 "
+            # Setup directory and naming
+            command += "-o output/subject{}/subject{}_ ".format(i, i)
+            # Defaults to bootstrap modelbuilds with rigid prealignmnet,
+            # no rigid update
+            command += "-r 1 -l 1 -y 0 "
+            # Model build setup
+            command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} ".format(
+                args.cluster_type, args.average_type, args.float,
+                args.gradient_step, args.model_iterations, int(args.N4),
+                args.metric, args.transform)
+            # Registrations Setup
+            command += "-q {} -f {} -s {} ".format(
+                args.reg_iterations, args.reg_shrinks, args.reg_smoothing)
+            if args.rigid_model_target:
+                command += "-z {} ".format(args.rigid_model_target)
+            command += " ".join(subject)
+            command += " && echo DONE > output/subject{}/COMPLETE".format(i)
+            commands.append(command)
+
         imagelist.append(
-            subject +
-            ["output/subject{0}/subject{0}_template0.nii.gz".format(i)])
+            subject
+            + ["output/subject{0}/subject{0}_template0.nii.gz".format(i)])
     # Here we should add the ability to limit the number of commands submitted
     results = list()
-    if args.cluster_type != 0:
-        pool = multiprocessing.Pool()
-    else:
-        pool = multiprocessing.Pool(processes=args.local_threads)
-    for item in tqdm.tqdm(
-            pool.imap_unordered(lambda x: run_command(x, args.dry_run),
-                                commands),
-            total=len(commands)):
-        results.append(item)
-    if not args.dry_run:
-        for i, subject in enumerate(results, start=0):
-            with open('output/subject{0}/subject{0}.log'.format(i),
-                      'wb') as logfile:
-                logfile.write(subject.stdout)
-    pool.close()
+    if len(commands) > 0:
+        if args.cluster_type != 0:
+            pool = multiprocessing.Pool()
+        else:
+            pool = multiprocessing.Pool(processes=args.local_threads)
+
+        for item in tqdm.tqdm(
+                pool.imap_unordered(lambda x: run_command(x, args.dry_run),
+                                    commands),
+                total=len(commands)):
+            results.append(item)
+        if not args.dry_run:
+            for i, subject in enumerate(results, start=0):
+                with open('output/subject{0}/subject{0}.log'.format(i),
+                          'wb') as logfile:
+                    logfile.write(subject.stdout)
+        pool.close()
     secondlevel(imagelist, args, secondlevel=True)
-    return (imagelist)
 
 
 def secondlevel(inputs, args, secondlevel=False):
-    commands = list()
     outputs = list()
     if secondlevel:
         input_images = [row[-1] for row in inputs]
     else:
         input_images = [val for sublist in inputs for val in sublist]
-    # Base command
-    command = """my-antsMultivariateTemplateConstruction2.sh -d 3 """
-    # Setup directory and naming
-    command += """-o output/secondlevel/secondlevel_ """
-    # Defaults to bootstrap modelbuilds with rigid prealignmnet, no rigid
-    # update
-    command += """-r 1 -l 1 -y 0 """
-    # Model build setup
-    command += """-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} """.format(
-        args.cluster_type, args.average_type, args.float, args.gradient_step,
-        args.model_iterations, (not secondlevel) and int(args.N4) or "0",
-        args.metric, args.transform)
-    # Registrations Setup
-    command += """-q {} -f {} -s {} """.format(
-        args.reg_iterations, args.reg_shrinks, args.reg_smoothing)
-    if args.rigid_model_target:
-        command += "-z {} ".format(args.rigid_model_target)
-    command += " ".join(input_images)
-    results = run_command(command, args.dry_run)
-    # Here we should add the ability to limit the number of commands submitted
-    if not args.dry_run:
-        with open('output/secondlevel/secondlevel.log', 'wb') as logfile:
-            logfile.write(results.stdout)
+    if not is_non_zero_file("output/secondlevel/COMPLETE"):
+        # Base command
+        command = "antsMultivariateTemplateConstruction2.sh -d 3 "
+        # Setup directory and naming
+        command += "-o output/secondlevel/secondlevel_ "
+        # Defaults to bootstrap modelbuilds with rigid prealignmnet, no rigid
+        # update
+        command += """-r 1 -l 1 -y 0 """
+        # Model build setup
+        command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} ".format(
+            args.cluster_type, args.average_type, args.float, args.gradient_step,
+            args.model_iterations, (not secondlevel) and int(args.N4) or "0",
+            args.metric, args.transform)
+        # Registrations Setup
+        command += "-q {} -f {} -s {} ".format(
+            args.reg_iterations, args.reg_shrinks, args.reg_smoothing)
+        if args.rigid_model_target:
+            command += "-z {} ".format(args.rigid_model_target)
+        command += " ".join(input_images)
+        command += " && echo DONE > output/secondlevel/COMPLETE"
+        results = run_command(command, args.dry_run)
+        # Here we should add the ability to limit the number of commands submitted
+        if not args.dry_run:
+            with open('output/secondlevel/secondlevel.log', 'wb') as logfile:
+                logfile.write(results.stdout)
 
     # Create mask for delin
     mkdirp("output/jacobians/resampled")
