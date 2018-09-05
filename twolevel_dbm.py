@@ -375,8 +375,9 @@ def read_csv(inputfile):
             for row in reader:
                 inputs.append(list(filter(None, row)))
         except csv.Error as e:
-            sys.exit('file {}, line {}: {}'.format(filename, reader.line_num,
-                                                   e))
+            sys.exit(
+                'malformed csv: file {}, line {}: {}'.format(
+                    inputfile, reader.line_num, e))
     return (inputs)
 
 
