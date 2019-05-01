@@ -3,6 +3,7 @@
 import argparse
 import csv
 import os
+import errno
 import pathlib  # Better path manipulation
 import shlex
 import subprocess
@@ -41,7 +42,7 @@ def mkdirp(*p):
     try:
         os.makedirs(path)
     except OSError as exc:
-        if exc.errno == os.errno.EEXIST:
+        if exc.errno == errno.EEXIST:
             pass
         else:
             raise
