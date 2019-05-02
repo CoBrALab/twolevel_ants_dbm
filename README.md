@@ -38,6 +38,16 @@ residual affine components of the warp field removed using
 affine jacobian added to account for bulk volume changes. ``relative`` and ``absolute``
 files are generally expected to be used for statistical analysis.
 
+# Requirements
+
+In addition to the python packages listed in ``requirements.txt``, this pipeline
+relies on the [ANTsX/ANTs](https://github.com/ANTsX/ANTs) tools v2.3.1 or newer.
+Note that in earlier releases, a bug in the ``antsMultivariateTemplateConstruction2.sh``
+script aggressively strips all periods from the input filenames breaking the
+naming expected by ``twolevel_dbm.py``. Either avoid using periods in your filenames
+or install ANTs version https://github.com/ANTsX/ANTs/commit/412bb8fef534c0e9b6c1fc22c39492ab46ea22e4
+or newer.
+
 # Full help
 
 ```
