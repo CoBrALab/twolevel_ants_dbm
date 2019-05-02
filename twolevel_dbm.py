@@ -164,6 +164,8 @@ def firstlevel(inputs, args):
                           'wb') as logfile:
                     logfile.write(subject.stdout)
         pool.close()
+        #Needed to completely destroy the pool so that pathos doesn't reuse
+        pool.clear()
     secondlevel(imagelist, args, secondlevel=True)
 
 
@@ -339,6 +341,7 @@ def secondlevel(inputs, args, secondlevel=False):
             x, args.dry_run), commands), total=len(commands)):
         pass
     pool.close()
+    pool.clear()
 
 
 def read_csv(inputfile):
