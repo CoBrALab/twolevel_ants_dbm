@@ -121,11 +121,12 @@ def firstlevel(inputs, args):
     commands = list()
     imagelist = list()
     for i, subject in enumerate(inputs, start=0):
-        if not is_non_zero_file("output/subject{}/COMPLETE".format(i)):
+        subjectnum = str(i).zfill(len(str(len(inputs)))+1)
+        if not is_non_zero_file("output/subject{}/COMPLETE".format(subjectnum)):
             # Base command
             command = f"{args.modelbuild_command} -d 3 "
             # Setup directory and naming
-            command += "-o output/subject{}/subject{}_ ".format(i, i)
+            command += "-o output/subject{}/subject{}_ ".format(subjectnum, subjectnum)
             # Defaults to bootstrap modelbuilds with rigid prealignmnet,
             # no rigid update
             command += "-r 1 -l 1 -y 0 "
@@ -140,12 +141,12 @@ def firstlevel(inputs, args):
             if args.rigid_model_target:
                 command += "-z {} ".format(args.rigid_model_target)
             command += " ".join(subject)
-            command += " && echo DONE > output/subject{}/COMPLETE".format(i)
+            command += " && echo DONE > output/subject{}/COMPLETE".format(subjectnum)
             commands.append(command)
 
         imagelist.append(
             subject
-            + ["output/subject{0}/subject{0}_template0.nii.gz".format(i)])
+            + ["output/subject{0}/subject{0}_template0.nii.gz".format(subjectnum)])
     # Here we should add the ability to limit the number of commands submitted
     results = list()
     if len(commands) > 0:
@@ -161,7 +162,7 @@ def firstlevel(inputs, args):
             results.append(item)
         if not args.dry_run:
             for i, subject in enumerate(results, start=0):
-                with open('output/subject{0}/subject{0}.log'.format(i),
+                with open('output/subject{0}/subject{0}.log'.format(subjectnum),
                           'wb') as logfile:
                     logfile.write(subject.stdout)
         pool.close()
@@ -214,13 +215,14 @@ def secondlevel(inputs, args, secondlevel=False):
     jacobians = list()
     print("Processing Second-Level DBM outputs")
     for i, subject in enumerate(tqdm.tqdm(input_images), start=0):
+        subjectnum = str(i).zfill(len(str(len(input_images)))+1)
         subjectname = pathlib.Path(subject).name.rsplit('.nii')[0]
         if not is_non_zero_file("output/compositewarps/secondlevel/COMPLETE"):
             commands = list()
             # print(f"Processing subject {subject} DBM outputs")
             # Compute delin
             run_command(
-                f"ANTSUseDeformationFieldToGetAffineTransform output/secondlevel/secondlevel_{subjectname}{i}1InverseWarp.nii.gz 0.25 "
+                f"ANTSUseDeformationFieldToGetAffineTransform output/secondlevel/secondlevel_{subjectname}{subjectnum}1InverseWarp.nii.gz 0.25 "
                 f"affine output/compositewarps/secondlevel/{subjectname}_delin.mat output/secondlevel/secondlevel_otsumask.nii.gz", args.dry_run)
 
             # Create composite field of delin
@@ -230,7 +232,7 @@ def secondlevel(inputs, args, secondlevel=False):
 
             # Create composite field of affine
             commands.append(
-                f"antsApplyTransforms -d 3 -t [output/secondlevel/secondlevel_{subjectname}{i}0GenericAffine.mat,1] "
+                f"antsApplyTransforms -d 3 -t [output/secondlevel/secondlevel_{subjectname}{subjectnum}0GenericAffine.mat,1] "
                 f"-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel/{subjectname}_affine.nii.gz,1]")
 
             pool.map(lambda x: run_command(x, args.dry_run), commands)
@@ -238,7 +240,7 @@ def secondlevel(inputs, args, secondlevel=False):
 
             # Generate jacobians of composite affine fields and nonlinear fields
             commands.append(
-                f"CreateJacobianDeterminantImage 3 output/secondlevel/secondlevel_{subjectname}{i}1Warp.nii.gz output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz 1 1")
+                f"CreateJacobianDeterminantImage 3 output/secondlevel/secondlevel_{subjectname}{subjectnum}1Warp.nii.gz output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz 1 1")
             commands.append(
                 f"CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel/{subjectname}_delin.nii.gz output/jacobians/overall/secondlevel_{subjectname}_delin.nii.gz 1 1")
             commands.append(
@@ -269,6 +271,7 @@ def secondlevel(inputs, args, secondlevel=False):
         print("Processing First-Level DBM Outputs")
         for subjectnum, row in enumerate(tqdm.tqdm([line[:-1] for line in inputs]), start=0):
             # Make a mask per subject
+            subjectnum = str(subjectnum).zfill(len(str(len([line[:-1] for line in inputs])))+1)
             run_command(
                 f"ThresholdImage 3 output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz output/subject{subjectnum}/subject{subjectnum}_otsumask.nii.gz Otsu 1", args.dry_run)
             for scannum, scan in enumerate(row, start=0):
