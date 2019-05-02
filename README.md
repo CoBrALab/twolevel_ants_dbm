@@ -51,7 +51,7 @@ or newer.
 # Full help
 
 ```
-usage: twolevel_dbm.py [-h] -i INPUT
+usage: twolevel_dbm.py [-h]
                        [--jacobian-sigmas JACOBIAN_SIGMAS [JACOBIAN_SIGMAS ...]]
                        [--rigid-model-target RIGID_MODEL_TARGET]
                        [--resample-to-common-space RESAMPLE_TO_COMMON_SPACE]
@@ -63,10 +63,11 @@ usage: twolevel_dbm.py [-h] -i INPUT
                        [--average-type {mean,normmean,median}]
                        [--gradient-step GRADIENT_STEP]
                        [--model-iterations MODEL_ITERATIONS]
+                       [--modelbuild-command MODELBUILD_COMMAND]
                        [--cluster-type {local,sge,pbs,slurm}]
                        [--walltime WALLTIME] [--memory-request MEMORY_REQUEST]
                        [--local-threads LOCAL_THREADS]
-                       {1level,2level}
+                       {1level,2level} input
 
 This pipeline performs one or two level model building on files using
 antsMultivariateTemplateConstruction2.sh and generates smoothed jacobian
@@ -75,17 +76,16 @@ analysis.
 
 positional arguments:
   {1level,2level}       What type of DBM processing to run on input file, see
-                        --input for details on how to format CSV file for
+                        input for details on how to format CSV file for
                         different types.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i INPUT, --input INPUT
-                        Input CSV file for DBM, for 1level mode, a single
+  input                 Input CSV file for DBM, for 1level mode, a single
                         column, for 2level, each each row constructs a first
                         level model followed by a second level model of the
                         resulting first level averages. File paths must be
-                        absolute. (default: None)
+                        absolute.
+
+optional arguments:
+  -h, --help            show this help message and exit
   --jacobian-sigmas JACOBIAN_SIGMAS [JACOBIAN_SIGMAS ...]
                         List of smoothing sigmas used for final output,
                         defaults to 2x finest resolution input file or rigid
@@ -130,6 +130,11 @@ advanced options:
   --model-iterations MODEL_ITERATIONS
                         How many registration and average rounds to do
                         (default: 3)
+  --modelbuild-command MODELBUILD_COMMAND
+                        Command to use for performing model build, must accept
+                        same arguments as
+                        antsMultivariateTemplateConstruction2.sh (default:
+                        antsMultivariateTemplateConstruction2.sh)
 
 cluster options:
   --cluster-type {local,sge,pbs,slurm}
