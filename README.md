@@ -47,9 +47,14 @@ resume capability of post-processing, it will improve in the future.
 
 # Requirements
 
-In addition to the python packages listed in ``requirements.txt``, this pipeline
-relies on the [ANTsX/ANTs](https://github.com/ANTsX/ANTs) tools v2.3.1 or newer.
-Note that in earlier releases, a bug in the ``antsMultivariateTemplateConstruction2.sh``
+## Python
+
+``twolevel_dbm.py`` requires 3.6 or newer and the packages listed in ``requirements.txt``
+
+## Other tools
+
+This pipeline relies on the [ANTsX/ANTs](https://github.com/ANTsX/ANTs) tools v2.3.1 or newer,
+build without the VTK addons. Note that in earlier releases, a bug in the ``antsMultivariateTemplateConstruction2.sh``
 script aggressively strips all periods from the input filenames breaking the
 naming expected by ``twolevel_dbm.py``. Either avoid using periods in your filenames
 or install ANTs version https://github.com/ANTsX/ANTs/commit/412bb8fef534c0e9b6c1fc22c39492ab46ea22e4
