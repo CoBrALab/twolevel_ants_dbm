@@ -165,6 +165,9 @@ def firstlevel(inputs, args):
                           'wb') as logfile:
                     logfile.write(subject.stdout)
         pool.close()
+        # required to ensure that the pool created at the second level
+        # with the same number of nodes can reuse the pool
+        pool.restart()
     secondlevel(imagelist, args, secondlevel=True)
 
 
