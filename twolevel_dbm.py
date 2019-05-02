@@ -300,7 +300,7 @@ def secondlevel(inputs, args, secondlevel=False):
                 pool.map(lambda x: run_command(x, args.dry_run), commands)
                 commands = list()
 
-                # Create relative and absoloute jacobians by adding affine/delin jacobians
+                # Create relative and absolute jacobians by adding affine/delin jacobians
                 commands.append(
                     f"ImageMath 3 output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz + output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz")
                 commands.append(
