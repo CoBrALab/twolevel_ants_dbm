@@ -38,6 +38,13 @@ residual affine components of the warp field removed using
 affine jacobian added to account for bulk volume changes. ``relative`` and ``absolute``
 files are generally expected to be used for statistical analysis.
 
+# Interrupted Pipelines
+
+``twolevel_dbm.py`` keeps track of which level 1 group model builds have been completed and
+will not re-process those files if a pipeline is interrupted and run again. Similarly
+if the second level model build is complete it will not be re-run. There is partial
+resume capability of post-processing, it will improve in the future.
+
 # Requirements
 
 In addition to the python packages listed in ``requirements.txt``, this pipeline
