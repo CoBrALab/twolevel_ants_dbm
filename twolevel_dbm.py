@@ -400,7 +400,7 @@ def main():
     )
     parser.add_argument(
         '--resample-to-common-space',
-        help="""Target space to resample
+        help="""NOT YET IMPLEMENTED -- Target space to resample
         jacobians to after unbiased model build, typically an MNI model, triggers a
         registration to this target""")
     parser.add_argument(
