@@ -123,7 +123,7 @@ def firstlevel(inputs, args):
     for i, subject in enumerate(inputs, start=0):
         if not is_non_zero_file("output/subject{}/COMPLETE".format(i)):
             # Base command
-            command = "antsMultivariateTemplateConstruction2.sh -d 3 "
+            command = f"{args.modelbuild_command} -d 3 "
             # Setup directory and naming
             command += "-o output/subject{}/subject{}_ ".format(i, i)
             # Defaults to bootstrap modelbuilds with rigid prealignmnet,
@@ -165,6 +165,8 @@ def firstlevel(inputs, args):
                           'wb') as logfile:
                     logfile.write(subject.stdout)
         pool.close()
+        #Needed to completely destroy the pool so that pathos doesn't reuse
+        pool.clear()
     secondlevel(imagelist, args, secondlevel=True)
 
 
@@ -176,7 +178,7 @@ def secondlevel(inputs, args, secondlevel=False):
         input_images = [val for sublist in inputs for val in sublist]
     if not is_non_zero_file("output/secondlevel/COMPLETE"):
         # Base command
-        command = "antsMultivariateTemplateConstruction2.sh -d 3 "
+        command = f"{args.modelbuild_command} -d 3 "
         # Setup directory and naming
         command += "-o output/secondlevel/secondlevel_ "
         # Defaults to bootstrap modelbuilds with rigid prealignmnet, no rigid
@@ -299,7 +301,7 @@ def secondlevel(inputs, args, secondlevel=False):
                 pool.map(lambda x: run_command(x, args.dry_run), commands)
                 commands = list()
 
-                # Create relative and absoloute jacobians by adding affine/delin jacobians
+                # Create relative and absolute jacobians by adding affine/delin jacobians
                 commands.append(
                     f"ImageMath 3 output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz + output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz")
                 commands.append(
@@ -340,6 +342,7 @@ def secondlevel(inputs, args, secondlevel=False):
             x, args.dry_run), commands), total=len(commands)):
         pass
     pool.close()
+    pool.clear()
 
 
 def read_csv(inputfile):
@@ -377,9 +380,12 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(
-        '-i',
-        '--input',
-        required=True,
+        "type",
+        choices=['1level', '2level'],
+        help="""What type of DBM processing to run on input file, see input
+            for details on how to format CSV file for different types.""")
+    parser.add_argument(
+        'input',
         help="""Input CSV file for DBM, for
         1level mode, a single column, for 2level, each each row constructs a first level model
         followed by a second level model of the resulting first level averages. File paths must
@@ -398,18 +404,13 @@ def main():
     )
     parser.add_argument(
         '--resample-to-common-space',
-        help="""Target space to resample
+        help="""NOT YET IMPLEMENTED -- Target space to resample
         jacobians to after unbiased model build, typically an MNI model, triggers a
         registration to this target""")
     parser.add_argument(
         '--dry-run',
         action='store_true',
         help="Don't run commands, instead print to stdout")
-    parser.add_argument(
-        "type",
-        choices=['1level', '2level'],
-        help="""What type of DBM processing to run on input file, see --input
-            for details on how to format CSV file for different types.""")
 
     advanced = parser.add_argument_group('advanced options')
     advanced.add_argument(
@@ -464,6 +465,11 @@ def main():
         default=3,
         type=int,
         help="How many registration and average rounds to do")
+    advanced.add_argument(
+        '--modelbuild-command',
+        default="antsMultivariateTemplateConstruction2.sh",
+        help="""Command to use for performing model build, must accept same
+        arguments as antsMultivariateTemplateConstruction2.sh""")
 
     cluster = parser.add_argument_group('cluster options')
     cluster.add_argument(
@@ -505,8 +511,8 @@ def main():
             "not match in length"
         )
 
-    if not which("antsMultivariateTemplateConstruction2.sh"):
-        sys.exit("antsMultivariateTemplateConstruction2.sh command not found")
+    if not which(args.modelbuild_command):
+        sys.exit(f"{args.modelbuild_command} command not found")
 
     inputs = read_csv(args.input)
     setup_and_check_inputs(inputs, args)
