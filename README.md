@@ -28,6 +28,13 @@ by [CoBrALab/minc-bpipe-library](https://github.com/CobraLab/minc-bpipe-library)
 Skull stripped files produce better initial affine matches during registration and
 provide stronger features to SyN registration stages compared to unstripped files.
 
+## Configuration
+
+Suggested configuration is to use a ``--rigid-model-target``, typically an MNI model,
+with the brain extracted. If you have a sufficently large population, you may wish
+to upsample the target to twice the resolution of your population, to take advantage
+of the population random sampling of the underlying average anatomy.
+
 # Outputs
 
 ``twolevel_dbm.py`` produces three types of jacobian determinant images from the
@@ -37,6 +44,12 @@ residual affine components of the warp field removed using
 ``ANTSUseDeformationFieldToGetAffineTransform`` and ``absolute`` files have the
 affine jacobian added to account for bulk volume changes. ``relative`` and ``absolute``
 files are generally expected to be used for statistical analysis.
+
+For two-level pipelines, jacobians are produced for two different transformations,
+``resampled`` are within-subject jacobians, resampled into the final average
+anatomical space, ``overall`` are jacobains encoding all volumetric differences
+between the individual subject input files to the final anatomical average.
+For most applications the ``resampled`` jacobians are suggested for analysis.
 
 # Interrupted Pipelines
 
