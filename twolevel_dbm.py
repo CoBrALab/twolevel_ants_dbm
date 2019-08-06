@@ -130,10 +130,10 @@ def firstlevel(inputs, args):
             # no rigid update
             command += "-r 1 -l 1 -y 0 "
             # Model build setup
-            command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} ".format(
+            command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} -u {} -v {} ".format(
                 args.cluster_type, args.average_type, args.float,
                 args.gradient_step, args.model_iterations, int(args.N4),
-                args.metric, args.transform)
+                args.metric, args.transform, args.walltime, args.memory_request)
             # Registrations Setup
             command += "-q {} -f {} -s {} ".format(
                 args.reg_iterations, args.reg_shrinks, args.reg_smoothing)
@@ -185,10 +185,10 @@ def secondlevel(inputs, args, secondlevel=False):
         # update
         command += """-r 1 -l 1 -y 0 """
         # Model build setup
-        command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} ".format(
+        command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} -u {} -v {}".format(
             args.cluster_type, args.average_type, args.float, args.gradient_step,
             args.model_iterations, (not secondlevel) and int(args.N4) or "0",
-            args.metric, args.transform)
+            args.metric, args.transform, args.walltime, args.memory_request)
         # Registrations Setup
         command += "-q {} -f {} -s {} ".format(
             args.reg_iterations, args.reg_shrinks, args.reg_smoothing)
