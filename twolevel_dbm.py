@@ -185,7 +185,7 @@ def secondlevel(inputs, args, secondlevel=False):
         # update
         command += """-r 1 -l 1 -y 0 """
         # Model build setup
-        command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} -u {} -v {}".format(
+        command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} -u {} -v {} ".format(
             args.cluster_type, args.average_type, args.float, args.gradient_step,
             args.model_iterations, (not secondlevel) and int(args.N4) or "0",
             args.metric, args.transform, args.walltime, args.memory_request)
