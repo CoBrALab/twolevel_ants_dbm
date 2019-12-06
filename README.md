@@ -120,7 +120,7 @@ optional arguments:
                         second level, otherwise unbiased average to start
                         (default: None)
   --resample-to-common-space RESAMPLE_TO_COMMON_SPACE
-                        NOT YET IMPLEMENTED -- Target space to resample
+                        Target space to resample
                         jacobians to after unbiased model build, typically an
                         MNI model, triggers a registration to this target
                         (default: None)
