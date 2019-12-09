@@ -548,7 +548,7 @@ def main():
     )
     parser.add_argument(
         "--resample-to-common-space",
-        help="""Target space to resample
+        help="""Target nifti file of atlas space to resample to
         jacobians to after unbiased model build, typically an MNI model, triggers a
         registration to this target""",
     )
