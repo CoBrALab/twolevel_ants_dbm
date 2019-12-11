@@ -26,14 +26,19 @@ def run_command(command, dryrun, verbose=False):
     else:
         if verbose:
             print(f"twolevel_dbm.py: running command {command}")
-        result = subprocess.run(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=True,
-            shell=True,
-        )
-        return result
+        try:
+          result = subprocess.run(
+              command,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.STDOUT,
+              check=True,
+              shell=True,
+          )
+          return result
+        except subprocess.CalledProcessError as e:
+           print(f"Command {e.cmd} failed with returncode {e.returncode}")
+           print(e.output)
+           return e
 
 
 def mkdirp(*p):
