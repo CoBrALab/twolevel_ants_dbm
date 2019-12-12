@@ -9,7 +9,7 @@ import shlex
 import subprocess
 import sys
 
-import pathos.multiprocessing as multiprocessing  # Better multiprocessing
+import pathos.threading as threading  # Better multiprocessing
 import tqdm  # Progress bar
 
 
@@ -178,9 +178,9 @@ def firstlevel(inputs, args):
     results = list()
     if len(commands) > 0:
         if args.cluster_type != 0:
-            pool = multiprocessing.ProcessPool(nodes=len(commands))
+            pool = threading.ThreadPool(nodes=min(len(commands),threading.cpu_count()//2))
         else:
-            pool = multiprocessing.ProcessPool(nodes=args.local_threads)
+            pool = threading.ThreadPool(nodes=args.local_threads)
 
         for item in tqdm.tqdm(
             pool.uimap(lambda x: run_command(x, args.dry_run), commands),
@@ -240,7 +240,7 @@ def secondlevel(inputs, args, secondlevel=False):
             with open("output/secondlevel/secondlevel.log", "wb") as logfile:
                 logfile.write(results.stdout)
 
-    pool = multiprocessing.ProcessPool(nodes=args.local_threads)
+    pool = threading.ThreadPool(nodes=args.local_threads)
 
     mkdirp("output/jacobians/overall")
     mkdirp("output/compositewarps/secondlevel")
@@ -654,7 +654,7 @@ def main():
         "--local-threads",
         "-j",
         type=int,
-        default=multiprocessing.cpu_count(),
+        default=threading.cpu_count()//2,
         help="""For local execution, how many subject-wise modelbuilds to run in parallel,
         defaults to number of CPUs""",
     )
