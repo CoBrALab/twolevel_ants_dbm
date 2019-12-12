@@ -178,7 +178,7 @@ def firstlevel(inputs, args):
     results = list()
     if len(commands) > 0:
         if args.cluster_type != 0:
-            pool = threading.ThreadPool(nodes=min(len(commands),threading.cpu_count()))
+            pool = threading.ThreadPool(nodes=min(len(commands),threading.cpu_count()//2))
         else:
             pool = threading.ThreadPool(nodes=args.local_threads)
 
@@ -654,7 +654,7 @@ def main():
         "--local-threads",
         "-j",
         type=int,
-        default=threading.cpu_count(),
+        default=threading.cpu_count()//2,
         help="""For local execution, how many subject-wise modelbuilds to run in parallel,
         defaults to number of CPUs""",
     )
