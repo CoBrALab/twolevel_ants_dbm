@@ -246,6 +246,10 @@ def secondlevel(inputs, args, secondlevel=False):
 
     pool = threading.ThreadPool(nodes=args.local_threads)
 
+    if args.skip_dbm:
+        print("Skipping generation of DBM outputs")
+        sys.exit()
+
     mkdirp("output/jacobians/overall")
     mkdirp("output/compositewarps/secondlevel")
     # Create mask for delin
@@ -561,6 +565,11 @@ def main():
         help="""Target nifti file of atlas space to resample to
         jacobians to after unbiased model build, typically an MNI model, triggers a
         registration to this target""",
+    )
+    parser.add_argument(
+        "--skip-dbm",
+        action="store_true",
+        help="Skip generating DBM outputs",
     )
     parser.add_argument(
         "--dry-run",

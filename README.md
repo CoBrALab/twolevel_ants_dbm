@@ -80,7 +80,7 @@ usage: twolevel_dbm.py [-h]
                        [--jacobian-sigmas JACOBIAN_SIGMAS [JACOBIAN_SIGMAS ...]]
                        [--rigid-model-target RIGID_MODEL_TARGET]
                        [--resample-to-common-space RESAMPLE_TO_COMMON_SPACE]
-                       [--dry-run] [--N4] [--metric METRIC]
+                       [--skip-dbm] [--dry-run] [--N4] [--metric METRIC]
                        [--transform {SyN,BSplineSyN,TimeVaryingVelocityField,TimeVaryingBSplineVelocityField,Affine,Rigid}]
                        [--reg-iterations REG_ITERATIONS]
                        [--reg-smoothing REG_SMOOTHING]
@@ -124,6 +124,7 @@ optional arguments:
                         jacobians to after unbiased model build, typically an
                         MNI model, triggers a registration to this target
                         (default: None)
+  --skip-dbm            Skip generating DBM outputs (default: False)
   --dry-run             Don't run commands, instead print to stdout (default:
                         False)
 
@@ -173,5 +174,5 @@ cluster options:
   --local-threads LOCAL_THREADS, -j LOCAL_THREADS
                         For local execution, how many subject-wise modelbuilds
                         to run in parallel, defaults to number of CPUs
-                        (default: 8)
+                        (default: 4)
 ```
