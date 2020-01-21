@@ -249,6 +249,13 @@ def secondlevel(inputs, args, secondlevel=False):
         "ThresholdImage 3 output/secondlevel/secondlevel_template0.nii.gz output/secondlevel/secondlevel_otsumask.nii.gz Otsu 1",
         args.dry_run,
     )
+    # Register final model to common space
+    if args.resample_to_common_space:
+        print("Registering final modelbuild to target common space")
+        run_command(
+            f"antsRegistrationSyN.sh -d 3 -f {args.resample_to_common_space} -m output/secondlevel/secondlevel_template0.nii.gz -o output/secondlevel/template0_common_space_",
+            args.dry_run,
+        )
     # Loop over input file warp fields to produce delin
     jacobians = list()
     print("Processing Second-Level DBM outputs")
@@ -275,12 +282,6 @@ def secondlevel(inputs, args, secondlevel=False):
                 f"antsApplyTransforms -d 3 -t [output/secondlevel/secondlevel_{subjectname}{i}0GenericAffine.mat,1] "
                 f"-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel/{subjectname}_affine.nii.gz,1]"
             )
-
-            # Register final model to common space
-            if args.resample_to_common_space:
-                commands.append(
-                    f"antsRegistrationSyN.sh -d 3 -f {args.resample_to_common_space} -m output/secondlevel/secondlevel_template0.nii.gz -o output/secondlevel/template0_common_space_"
-                )
 
             pool.map(lambda x: run_command(x, args.dry_run), commands)
             commands = list()
