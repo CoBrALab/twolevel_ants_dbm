@@ -184,6 +184,7 @@ def firstlevel(inputs, args):
         else:
             pool = threading.ThreadPool(nodes=args.local_threads)
 
+        print(f"Running {len(commands)} First-Level Modelbuilds")
         for item in tqdm.tqdm(
             pool.uimap(lambda x: run_command(x, args.dry_run), commands),
             total=len(commands),
@@ -236,6 +237,7 @@ def secondlevel(inputs, args, secondlevel=False):
             command += "-z {} ".format(args.rigid_model_target)
         command += " ".join(input_images)
         command += " && echo DONE > output/secondlevel/COMPLETE"
+        print("Running Second-Level Modelbuild")
         results = run_command(command, args.dry_run)
         # Here we should add the ability to limit the number of commands submitted
         if not args.dry_run:
@@ -258,14 +260,13 @@ def secondlevel(inputs, args, secondlevel=False):
             f"antsRegistrationSyN.sh -d 3 -f {args.resample_to_common_space} -m output/secondlevel/secondlevel_template0.nii.gz -o output/secondlevel/template0_common_space_",
             args.dry_run,
         )
+    print("Processing Second-Level DBM outputs")
     # Loop over input file warp fields to produce delin
     jacobians = list()
-    print("Processing Second-Level DBM outputs")
     for i, subject in enumerate(tqdm.tqdm(input_images), start=0):
         subjectname = pathlib.Path(subject).name.rsplit(".nii")[0]
         if not is_non_zero_file("output/compositewarps/secondlevel/COMPLETE"):
             commands = list()
-            # print(f"Processing subject {subject} DBM outputs")
             # Compute delin
             run_command(
                 f"ANTSUseDeformationFieldToGetAffineTransform output/secondlevel/secondlevel_{subjectname}{i}1InverseWarp.nii.gz 0.25 "
