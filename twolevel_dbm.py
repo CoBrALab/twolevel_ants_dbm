@@ -361,7 +361,8 @@ def secondlevel(inputs, args, secondlevel=False):
                 f"output/jacobians/common_space/secondlevel_{subjectname}_nlin.nii.gz"
             )
 
-    run_command("echo DONE > output/jacobians/common_space/COMPLETE", args.dry_run)
+    if args.resample_to_common_space:
+      run_command("echo DONE > output/jacobians/common_space/COMPLETE", args.dry_run)
 
     if secondlevel:
         mkdirp("output/compositewarps/groupwise")
