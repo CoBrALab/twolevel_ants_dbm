@@ -361,7 +361,7 @@ def secondlevel(inputs, args, secondlevel=False):
                 f"output/jacobians/common_space/secondlevel_{subjectname}_nlin.nii.gz"
             )
 
-    if args.resample_to_common_space:
+    if not secondlevel and args.resample_to_common_space:
       run_command("echo DONE > output/jacobians/common_space/COMPLETE", args.dry_run)
 
     if secondlevel:
