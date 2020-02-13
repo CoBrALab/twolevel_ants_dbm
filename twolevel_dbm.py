@@ -8,6 +8,7 @@ import pathlib  # Better path manipulation
 import shlex
 import subprocess
 import sys
+import math
 
 import pathos.threading as threading  # Better multiprocessing
 import tqdm  # Progress bar
@@ -96,7 +97,7 @@ def setup_and_check_inputs(inputs, args):
                 )
             else:
                 args.jacobian_sigmas = [
-                    2
+                    2.0
                     * min(
                         map(
                             abs,
@@ -111,7 +112,7 @@ def setup_and_check_inputs(inputs, args):
                             ),
                         )
                     )
-                ]
+                / (2.0*math.sqrt(2.0*math.log(2.0))) ]
         else:
             minres = 1e6
             for row in inputs:
@@ -133,7 +134,7 @@ def setup_and_check_inputs(inputs, args):
                             )
                         )
                         minres = curres if curres < minres else curres
-            args.jacobian_sigmas = [2 * minres]
+            args.jacobian_sigmas = [ 2.0 * minres / (2.0*math.sqrt(2.0*math.log(2.0))) ]
 
 
 def firstlevel(inputs, args):
@@ -553,7 +554,7 @@ def main():
         nargs="+",
         type=float,
         help="""List of smoothing
-        sigmas used for final output, defaults to 2x finest resolution input file or
+        sigmas used for final output, defaults to FWHM of 2x finest resolution input file or
         rigid model target if provided.""",
     )
     parser.add_argument(
