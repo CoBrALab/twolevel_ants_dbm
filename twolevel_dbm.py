@@ -84,7 +84,8 @@ def setup_and_check_inputs(inputs, args):
         not is_non_zero_file(args.resample_to_common_space)
     ):
         sys.exit(
-            f"twolevel_dbm error: File {args.resample_to_common_space} does not exist or is zero size"
+            f"twolevel_dbm error: File {args.resample_to_common_space} does "
+            "not exist or is zero size"
         )
 
     # Find minimum resolution of input files unless blurs are set, or rigid
@@ -92,9 +93,7 @@ def setup_and_check_inputs(inputs, args):
     if not args.jacobian_sigmas:
         if args.rigid_model_target:
             if args.dry_run:
-                run_command(
-                    "PrintHeader {} 1".format(args.rigid_model_target), args.dry_run
-                )
+                run_command(f"PrintHeader {args.rigid_model_target} 1", args.dry_run)
             else:
                 args.jacobian_sigmas = [
                     2.0
@@ -104,7 +103,7 @@ def setup_and_check_inputs(inputs, args):
                             map(
                                 float,
                                 run_command(
-                                    "PrintHeader {} 1".format(args.rigid_model_target),
+                                    f"PrintHeader {args.rigid_model_target} 1",
                                     args.dry_run,
                                 )
                                 .stdout.decode("utf8")
@@ -119,16 +118,14 @@ def setup_and_check_inputs(inputs, args):
             for row in inputs:
                 for file in row:
                     if args.dry_run:
-                        run_command("PrintHeader {} 1".format(file), args.dry_run)
+                        run_command(f"PrintHeader {file} 1", args.dry_run)
                     else:
                         curres = min(
                             map(
                                 abs,
                                 map(
                                     float,
-                                    run_command(
-                                        "PrintHeader {} 1".format(file), args.dry_run
-                                    )
+                                    run_command(f"PrintHeader {file} 1", args.dry_run)
                                     .stdout.decode("utf8")
                                     .split("x"),
                                 ),
@@ -144,40 +141,36 @@ def firstlevel(inputs, args):
     commands = list()
     imagelist = list()
     for i, subject in enumerate(inputs, start=0):
-        if not is_non_zero_file("output/subject{}/COMPLETE".format(i)):
+        if not is_non_zero_file(f"output/subject{i}/COMPLETE"):
             # Base command
             command = f"{args.modelbuild_command} -d 3 "
             # Setup directory and naming
-            command += "-o output/subject{}/subject{}_ ".format(i, i)
+            command += f"-o output/subject{i}/subject{i}_ "
             # Defaults to bootstrap modelbuilds with rigid prealignmnet,
             # no rigid update
             command += "-r 1 -l 1 -y 0 "
             # Model build setup
-            command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} -u {} -v {} ".format(
-                args.cluster_type,
-                args.average_type,
-                args.float,
-                args.gradient_step,
-                args.model_iterations,
-                int(args.N4),
-                args.metric,
-                args.transform,
-                args.walltime,
-                args.memory_request,
+            command += (
+                f"-c {args.cluster_type} -a {args.average_type} "
+                f"-e {args.float} -g {args.gradient_step} "
+                f"-i {args.model_iterations} -n {int(args.N4)} "
+                f"-m {args.metric} -t {args.transform} "
+                f"-u {args.walltime} -v {args.memory_request} "
             )
             # Registrations Setup
-            command += "-q {} -f {} -s {} ".format(
-                args.reg_iterations, args.reg_shrinks, args.reg_smoothing
+            command += (
+                f"-q {args.reg_iterations} "
+                f"-f {args.reg_shrinks} "
+                f"-s {args.reg_smoothing} "
             )
+
             if args.rigid_model_target:
-                command += "-z {} ".format(args.rigid_model_target)
+                command += f"-z {args.rigid_model_target} "
             command += " ".join(subject)
-            command += " && echo DONE > output/subject{}/COMPLETE".format(i)
+            command += f" && echo DONE > output/subject{i}/COMPLETE"
             commands.append(command)
 
-        imagelist.append(
-            subject + ["output/subject{0}/subject{0}_template0.nii.gz".format(i)]
-        )
+        imagelist.append(subject + [f"output/subject{i}/subject{i}_template0.nii.gz"])
     # Here we should add the ability to limit the number of commands submitted
     results = list()
     if len(commands) > 0:
@@ -196,9 +189,7 @@ def firstlevel(inputs, args):
             results.append(item)
         if not args.dry_run:
             for i, subject in enumerate(results, start=0):
-                with open(
-                    "output/subject{0}/subject{0}.log".format(i), "wb"
-                ) as logfile:
+                with open(f"output/subject{i}/subject{i}.log", "wb") as logfile:
                     logfile.write(subject.stdout)
         pool.close()
         # Needed to completely destroy the pool so that pathos doesn't reuse
@@ -221,24 +212,21 @@ def secondlevel(inputs, args, secondlevel=False):
         # update
         command += """-r 1 -l 1 -y 0 """
         # Model build setup
-        command += "-c {} -a {} -e {} -g {} -i {} -n {} -m {} -t {} -u {} -v {} ".format(
-            args.cluster_type,
-            args.average_type,
-            args.float,
-            args.gradient_step,
-            args.model_iterations,
-            (not secondlevel) and int(args.N4) or "0",
-            args.metric,
-            args.transform,
-            args.walltime,
-            args.memory_request,
+        command += (
+            f"-c {args.cluster_type} -a {args.average_type} "
+            f"-e {args.float} -g {args.gradient_step} "
+            f"-i {args.model_iterations} "
+            f"-n {int(args.N4) if (not secondlevel) else '0'} -m {args.metric} "
+            f"-t {args.transform} -u {args.walltime} -v {args.memory_request} "
         )
         # Registrations Setup
-        command += "-q {} -f {} -s {} ".format(
-            args.reg_iterations, args.reg_shrinks, args.reg_smoothing
+        command += (
+            f"-q {args.reg_iterations} "
+            f"-f {args.reg_shrinks} "
+            f"-s {args.reg_smoothing} "
         )
         if args.rigid_model_target:
-            command += "-z {} ".format(args.rigid_model_target)
+            command += f"-z {args.rigid_model_target} "
         command += " ".join(input_images)
         command += " && echo DONE > output/secondlevel/COMPLETE"
         print("Running Second-Level Modelbuild")
@@ -514,11 +502,7 @@ def read_csv(inputfile):
             for row in reader:
                 inputs.append(list(filter(None, row)))
         except csv.Error as e:
-            sys.exit(
-                "malformed csv: file {}, line {}: {}".format(
-                    inputfile, reader.line_num, e
-                )
-            )
+            sys.exit(f"malformed csv: file {inputfile}, line {reader.line_num}: {e}")
     return inputs
 
 
