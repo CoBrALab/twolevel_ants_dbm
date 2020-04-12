@@ -222,6 +222,7 @@ def firstlevel(inputs, args):
         if not args.dry_run:
             for i, subject in enumerate(results, start=0):
                 with open(f"output/subject{i}/subject{i}.log", "wb") as logfile:
+                    logfile.write(commands[i].encode())
                     logfile.write(subject.stdout)
         pool.close()
         # Needed to completely destroy the pool so that pathos doesn't reuse
@@ -266,6 +267,7 @@ def secondlevel(inputs, args, secondlevel=False):
         # Here we should add the ability to limit the number of commands submitted
         if not args.dry_run:
             with open("output/secondlevel/secondlevel.log", "wb") as logfile:
+                logfile.write(command.encode())
                 logfile.write(results.stdout)
 
     pool = threading.ThreadPool(nodes=args.local_threads)
