@@ -112,7 +112,11 @@ def setup_and_check_inputs(inputs, args):
     if not args.jacobian_sigmas:
         if args.rigid_model_target:
             if args.dry_run:
-                run_command(f"PrintHeader {args.rigid_model_target} 1", args.dry_run)
+                run_command(
+                    f"PrintHeader {args.rigid_model_target} 1",
+                    args.dry_run,
+                    args.verbose,
+                )
                 args.jacobian_sigmas = [0]
             else:
                 args.jacobian_sigmas = [
@@ -125,6 +129,7 @@ def setup_and_check_inputs(inputs, args):
                                 run_command(
                                     f"PrintHeader {args.rigid_model_target} 1",
                                     args.dry_run,
+                                    args.verbose,
                                 )
                                 .stdout.decode("utf8")
                                 .split("x"),
@@ -138,7 +143,7 @@ def setup_and_check_inputs(inputs, args):
             for row in inputs:
                 for file in row:
                     if args.dry_run:
-                        run_command(f"PrintHeader {file} 1", args.dry_run)
+                        run_command(f"PrintHeader {file} 1", args.dry_run, args.verbose)
                         minres = 0
                     else:
                         curres = min(
@@ -146,7 +151,11 @@ def setup_and_check_inputs(inputs, args):
                                 abs,
                                 map(
                                     float,
-                                    run_command(f"PrintHeader {file} 1", args.dry_run)
+                                    run_command(
+                                        f"PrintHeader {file} 1",
+                                        args.dry_run,
+                                        args.verbose,
+                                    )
                                     .stdout.decode("utf8")
                                     .split("x"),
                                 ),
@@ -204,7 +213,7 @@ def firstlevel(inputs, args):
 
         print(f"Running {len(commands)} First-Level Modelbuilds")
         for item in tqdm.tqdm(
-            pool.uimap(lambda x: run_command(x, args.dry_run), commands),
+            pool.uimap(lambda x: run_command(x, args.dry_run, args.verbose), commands),
             total=len(commands),
         ):
             results.append(item)
@@ -251,7 +260,7 @@ def secondlevel(inputs, args, secondlevel=False):
         command += " ".join(input_images)
         command += " && echo DONE > output/secondlevel/COMPLETE"
         print("Running Second-Level Modelbuild")
-        results = run_command(command, args.dry_run)
+        results = run_command(command, args.dry_run, args.verbose)
         # Here we should add the ability to limit the number of commands submitted
         if not args.dry_run:
             with open("output/secondlevel/secondlevel.log", "wb") as logfile:
@@ -269,6 +278,7 @@ def secondlevel(inputs, args, secondlevel=False):
     run_command(
         "ThresholdImage 3 output/secondlevel/secondlevel_template0.nii.gz output/secondlevel/secondlevel_otsumask.nii.gz Otsu 1",
         args.dry_run,
+        args.verbose,
     )
     # Register final model to common space
     if (
@@ -279,10 +289,12 @@ def secondlevel(inputs, args, secondlevel=False):
         run_command(
             f"antsRegistrationSyN.sh -d 3 -f {args.resample_to_common_space} -m output/secondlevel/secondlevel_template0.nii.gz -o output/secondlevel/template0_common_space_",
             args.dry_run,
+            args.verbose,
         )
         run_command(
             "echo DONE > output/secondlevel/template0_common_space_COMPLETE",
             args.dry_run,
+            args.verbose,
         )
 
     print("Processing Second-Level DBM outputs")
@@ -297,6 +309,7 @@ def secondlevel(inputs, args, secondlevel=False):
                 f"ANTSUseDeformationFieldToGetAffineTransform output/secondlevel/secondlevel_{subjectname}{i}1InverseWarp.nii.gz 0.25 "
                 f"affine output/compositewarps/secondlevel/{subjectname}_delin.mat output/secondlevel/secondlevel_otsumask.nii.gz",
                 args.dry_run,
+                args.verbose,
             )
 
             # Create composite field of delin
@@ -311,7 +324,7 @@ def secondlevel(inputs, args, secondlevel=False):
                 f"-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel/{subjectname}_affine.nii.gz,1]"
             )
 
-            pool.map(lambda x: run_command(x, args.dry_run), commands)
+            pool.map(lambda x: run_command(x, args.dry_run, args.verbose), commands)
             commands = list()
 
             # Generate jacobians of composite affine fields and nonlinear fields
@@ -325,7 +338,7 @@ def secondlevel(inputs, args, secondlevel=False):
                 f"CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel/{subjectname}_affine.nii.gz output/jacobians/overall/secondlevel_{subjectname}_affine.nii.gz 1 1"
             )
 
-            pool.map(lambda x: run_command(x, args.dry_run), commands)
+            pool.map(lambda x: run_command(x, args.dry_run, args.verbose), commands)
             commands = list()
 
             commands.append(
@@ -334,7 +347,7 @@ def secondlevel(inputs, args, secondlevel=False):
             commands.append(
                 f"ImageMath 3 output/jacobians/overall/secondlevel_{subjectname}_absolute.nii.gz + output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz output/jacobians/overall/secondlevel_{subjectname}_affine.nii.gz"
             )
-            pool.uimap(lambda x: run_command(x, args.dry_run), commands)
+            pool.uimap(lambda x: run_command(x, args.dry_run, args.verbose), commands)
             commands = list()
 
         jacobians.append(
@@ -347,7 +360,11 @@ def secondlevel(inputs, args, secondlevel=False):
             f"output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz"
         )
 
-    run_command("echo DONE > output/compositewarps/secondlevel/COMPLETE", args.dry_run)
+    run_command(
+        "echo DONE > output/compositewarps/secondlevel/COMPLETE",
+        args.dry_run,
+        args.verbose,
+    )
 
     if not secondlevel and args.resample_to_common_space:
         mkdirp("output/jacobians/common_space", args.dry_run)
@@ -367,7 +384,9 @@ def secondlevel(inputs, args, secondlevel=False):
                     f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/secondlevel_{subjectname}_nlin.nii.gz"
                 )
 
-                pool.uimap(lambda x: run_command(x, args.dry_run), commands)
+                pool.uimap(
+                    lambda x: run_command(x, args.dry_run, args.verbose), commands
+                )
                 commands = list()
 
             jacobians.append(
@@ -381,7 +400,11 @@ def secondlevel(inputs, args, secondlevel=False):
             )
 
     if not secondlevel and args.resample_to_common_space:
-        run_command("echo DONE > output/jacobians/common_space/COMPLETE", args.dry_run)
+        run_command(
+            "echo DONE > output/jacobians/common_space/COMPLETE",
+            args.dry_run,
+            args.verbose,
+        )
 
     if secondlevel:
         print("Processing First-Level DBM Outputs")
@@ -396,6 +419,7 @@ def secondlevel(inputs, args, secondlevel=False):
                 run_command(
                     f"ThresholdImage 3 output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz output/subject{subjectnum}/subject{subjectnum}_otsumask.nii.gz Otsu 1",
                     args.dry_run,
+                    args.verbose,
                 )
                 for scannum, scan in enumerate(row, start=0):
                     commands = list()
@@ -405,6 +429,7 @@ def secondlevel(inputs, args, secondlevel=False):
                         f"ANTSUseDeformationFieldToGetAffineTransform output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}1InverseWarp.nii.gz 0.25 "
                         f"affine output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.mat output/subject{subjectnum}/subject{subjectnum}_otsumask.nii.gz",
                         args.dry_run,
+                        args.verbose,
                     )
                     commands.append(
                         f"antsApplyTransforms -d 3 -t [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.mat,1] -r output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz "
@@ -416,7 +441,9 @@ def secondlevel(inputs, args, secondlevel=False):
                         f"--verbose -o [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz,1]"
                     )
 
-                    pool.map(lambda x: run_command(x, args.dry_run), commands)
+                    pool.map(
+                        lambda x: run_command(x, args.dry_run, args.verbose), commands
+                    )
                     commands = list()
 
                     # Create jacobian images from nlin and composite warp fields
@@ -430,7 +457,9 @@ def secondlevel(inputs, args, secondlevel=False):
                         f"CreateJacobianDeterminantImage 3 output/compositewarps/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz 1 1"
                     )
 
-                    pool.map(lambda x: run_command(x, args.dry_run), commands)
+                    pool.map(
+                        lambda x: run_command(x, args.dry_run, args.verbose), commands
+                    )
                     commands = list()
 
                     # Create relative and absolute jacobians by adding affine/delin jacobians
@@ -441,7 +470,9 @@ def secondlevel(inputs, args, secondlevel=False):
                         f"ImageMath 3 output/jacobians/groupwise/subject{subjectnum}_{scanname}_absolute.nii.gz + output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz"
                     )
 
-                    pool.map(lambda x: run_command(x, args.dry_run), commands)
+                    pool.map(
+                        lambda x: run_command(x, args.dry_run, args.verbose), commands
+                    )
                     commands = list()
 
                     # Resample jacobian to common space
@@ -473,7 +504,9 @@ def secondlevel(inputs, args, secondlevel=False):
                             f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/subject{subjectnum}_{scanname}_nlin.nii.gz"
                         )
 
-                    pool.uimap(lambda x: run_command(x, args.dry_run), commands)
+                    pool.uimap(
+                        lambda x: run_command(x, args.dry_run, args.verbose), commands
+                    )
                     commands = list()
 
                 # Append jacobians to list
@@ -496,7 +529,11 @@ def secondlevel(inputs, args, secondlevel=False):
                     jacobians.append(
                         f"output/jacobians/common_space/subject{subjectnum}_{scanname}_nlin.nii.gz"
                     )
-        run_command("echo DONE > output/jacobians/resampled/COMPLETE", args.dry_run)
+        run_command(
+            "echo DONE > output/jacobians/resampled/COMPLETE",
+            args.dry_run,
+            args.verbose,
+        )
 
     commands = list()
     print("Blurring Jacobians")
@@ -506,7 +543,7 @@ def secondlevel(inputs, args, secondlevel=False):
                 f"SmoothImage 3 {jacobian} {blur} {jacobian.rsplit('.nii')[0]}_smooth{blur}.nii.gz 1 0"
             )
     for _ in tqdm.tqdm(
-        pool.uimap(lambda x: run_command(x, args.dry_run), commands),
+        pool.uimap(lambda x: run_command(x, args.dry_run, args.verbose), commands),
         total=len(commands),
     ):
         pass
@@ -589,6 +626,12 @@ def main():
         "--dry-run",
         action="store_true",
         help="Don't run commands, instead print to stdout",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Be verbose about what is going on",
     )
 
     advanced = parser.add_argument_group("advanced options")
