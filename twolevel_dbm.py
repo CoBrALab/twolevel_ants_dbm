@@ -26,7 +26,7 @@ def run_command(command, dryrun=False, verbose=False):
         return fakereturn
     else:
         if verbose:
-            print(f"twolevel_dbm.py: running command {command}")
+            print(f"twolevel_dbm.py: running command: {command}")
         result = subprocess.run(
             command,
             stdout=subprocess.PIPE,
@@ -94,18 +94,20 @@ def setup_and_check_inputs(inputs, args):
         for row in inputs:
             if len(row) > 1:
                 print(
-                    "twolevel_dbm warning: 1 level modelbuild specified but multiple "
+                    "twolevel_dbm.py warning: 1 level modelbuild specified but multiple "
                     "columns detected in input csv"
                 )
+                break
     # Warn about rows with single items in 2 level builds
     if args.type == "2level":
         for row in inputs:
             if len(row) == 1:
                 print(
-                    "twolevel_dbm warning: 2 level modelbuild specified but row with "
+                    "twolevel_dbm.py warning: 2 level modelbuild specified but row with "
                     "single scan provided, subject will only have overall "
                     "jacobains"
                 )
+                break
 
     # Find minimum resolution of input files unless blurs are set, or rigid
     # model is provided
@@ -211,7 +213,7 @@ def firstlevel(inputs, args):
         else:
             pool = threading.ThreadPool(nodes=args.local_threads)
 
-        print(f"Running {len(commands)} First-Level Modelbuilds")
+        print(f"twolevel_dbm.py: Running {len(commands)} First-Level Modelbuilds")
         for item in tqdm.tqdm(
             pool.uimap(lambda x: run_command(x, args.dry_run, args.verbose), commands),
             total=len(commands),
@@ -220,6 +222,7 @@ def firstlevel(inputs, args):
         if not args.dry_run:
             for i, subject in enumerate(results, start=0):
                 with open(f"output/subject{i}/subject{i}.log", "wb") as logfile:
+                    logfile.write(commands[i].encode())
                     logfile.write(subject.stdout)
         pool.close()
         # Needed to completely destroy the pool so that pathos doesn't reuse
@@ -259,18 +262,20 @@ def secondlevel(inputs, args, secondlevel=False):
             command += f"-z {args.rigid_model_target} "
         command += " ".join(input_images)
         command += " && echo DONE > output/secondlevel/COMPLETE"
-        print("Running Second-Level Modelbuild")
+        print("twolevel_dbm.py: Running Second-Level Modelbuild")
         results = run_command(command, args.dry_run, args.verbose)
         # Here we should add the ability to limit the number of commands submitted
         if not args.dry_run:
             with open("output/secondlevel/secondlevel.log", "wb") as logfile:
+                logfile.write(command.encode())
                 logfile.write(results.stdout)
 
     pool = threading.ThreadPool(nodes=args.local_threads)
 
     if args.skip_dbm:
-        print("Skipping generation of DBM outputs")
-        sys.exit()
+        print("twolevel_dbm.py: Skipping generation of DBM outputs")
+        print("twolevel_dbm.py: Pipeline Complete")
+        sys.exit(0)
 
     mkdirp("output/jacobians/overall", args.dry_run)
     mkdirp("output/compositewarps/secondlevel", args.dry_run)
@@ -285,7 +290,7 @@ def secondlevel(inputs, args, secondlevel=False):
         not is_non_zero_file("output/secondlevel/template0_common_space_COMPLETE")
         and args.resample_to_common_space
     ):
-        print("Registering final modelbuild to target common space")
+        print("twolevel_dbm.py: Registering final modelbuild to target common space")
         run_command(
             f"antsRegistrationSyN.sh -d 3 -f {args.resample_to_common_space} -m output/secondlevel/secondlevel_template0.nii.gz -o output/secondlevel/template0_common_space_",
             args.dry_run,
@@ -297,7 +302,7 @@ def secondlevel(inputs, args, secondlevel=False):
             args.verbose,
         )
 
-    print("Processing Second-Level DBM outputs")
+    print("twolevel_dbm.py: Processing Second-Level DBM outputs")
     # Loop over input file warp fields to produce delin
     jacobians = list()
     for i, subject in enumerate(tqdm.tqdm(input_images), start=0):
@@ -407,10 +412,10 @@ def secondlevel(inputs, args, secondlevel=False):
         )
 
     if secondlevel:
-        print("Processing First-Level DBM Outputs")
         mkdirp("output/compositewarps/groupwise", args.dry_run)
         mkdirp("output/jacobians/resampled", args.dry_run)
         mkdirp("output/jacobians/groupwise", args.dry_run)
+        print("twolevel_dbm.py: Processing First-Level DBM Outputs")
         for subjectnum, row in enumerate(
             tqdm.tqdm([line[:-1] for line in inputs]), start=0
         ):
@@ -536,7 +541,7 @@ def secondlevel(inputs, args, secondlevel=False):
         )
 
     commands = list()
-    print("Blurring Jacobians")
+    print("twolevel_dbm.py: Blurring Jacobians")
     for jacobian in jacobians:
         for blur in args.jacobian_sigmas:
             commands.append(
@@ -550,6 +555,8 @@ def secondlevel(inputs, args, secondlevel=False):
 
     pool.close()
     pool.clear()
+    print("twolevel_dbm.py: Pipeline Complete")
+    sys.exit(0)
 
 
 def read_csv(inputfile):
