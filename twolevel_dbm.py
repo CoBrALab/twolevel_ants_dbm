@@ -281,7 +281,8 @@ def secondlevel(inputs, args, secondlevel=False):
     mkdirp("output/compositewarps/secondlevel", args.dry_run)
     # Create mask for delin
     run_command(
-        "ThresholdImage 3 output/secondlevel/secondlevel_template0.nii.gz output/secondlevel/secondlevel_otsumask.nii.gz Otsu 1",
+        "ThresholdImage 3 output/secondlevel/secondlevel_template0.nii.gz "
+        "output/secondlevel/secondlevel_otsumask.nii.gz Otsu 1",
         args.dry_run,
         args.verbose,
     )
@@ -292,7 +293,9 @@ def secondlevel(inputs, args, secondlevel=False):
     ):
         print("twolevel_dbm.py: Registering final modelbuild to target common space")
         run_command(
-            f"antsRegistrationSyN.sh -d 3 -f {args.resample_to_common_space} -m output/secondlevel/secondlevel_template0.nii.gz -o output/secondlevel/template0_common_space_",
+            f"antsRegistrationSyN.sh -d 3 -f {args.resample_to_common_space} "
+            "-m output/secondlevel/secondlevel_template0.nii.gz "
+            "-o output/secondlevel/template0_common_space_",
             args.dry_run,
             args.verbose,
         )
@@ -311,22 +314,28 @@ def secondlevel(inputs, args, secondlevel=False):
             commands = list()
             # Compute delin
             run_command(
-                f"ANTSUseDeformationFieldToGetAffineTransform output/secondlevel/secondlevel_{subjectname}{i}1InverseWarp.nii.gz 0.25 "
-                f"affine output/compositewarps/secondlevel/{subjectname}_delin.mat output/secondlevel/secondlevel_otsumask.nii.gz",
+                f"ANTSUseDeformationFieldToGetAffineTransform "
+                f"output/secondlevel/secondlevel_{subjectname}{i}1InverseWarp.nii.gz 0.25 "
+                f"affine output/compositewarps/secondlevel/{subjectname}_delin.mat "
+                f"output/secondlevel/secondlevel_otsumask.nii.gz",
                 args.dry_run,
                 args.verbose,
             )
 
             # Create composite field of delin
             commands.append(
-                f"antsApplyTransforms -d 3 -t [output/compositewarps/secondlevel/{subjectname}_delin.mat,1] "
-                f"-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel/{subjectname}_delin.nii.gz,1]"
+                f"antsApplyTransforms -d 3 --verbose "
+                f"-t [output/compositewarps/secondlevel/{subjectname}_delin.mat,1] "
+                f"-r output/secondlevel/secondlevel_template0.nii.gz "
+                f"-o [output/compositewarps/secondlevel/{subjectname}_delin.nii.gz,1]"
             )
 
             # Create composite field of affine
             commands.append(
-                f"antsApplyTransforms -d 3 -t [output/secondlevel/secondlevel_{subjectname}{i}0GenericAffine.mat,1] "
-                f"-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o [output/compositewarps/secondlevel/{subjectname}_affine.nii.gz,1]"
+                f"antsApplyTransforms -d 3 --verbose "
+                f"-t [output/secondlevel/secondlevel_{subjectname}{i}0GenericAffine.mat,1] "
+                f"-r output/secondlevel/secondlevel_template0.nii.gz "
+                f"-o [output/compositewarps/secondlevel/{subjectname}_affine.nii.gz,1]"
             )
 
             pool.map(lambda x: run_command(x, args.dry_run, args.verbose), commands)
@@ -334,23 +343,30 @@ def secondlevel(inputs, args, secondlevel=False):
 
             # Generate jacobians of composite affine fields and nonlinear fields
             commands.append(
-                f"CreateJacobianDeterminantImage 3 output/secondlevel/secondlevel_{subjectname}{i}1Warp.nii.gz output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz 1 1"
+                f"CreateJacobianDeterminantImage 3 output/secondlevel/secondlevel_{subjectname}{i}1Warp.nii.gz "
+                f"output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz 1 1"
             )
             commands.append(
-                f"CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel/{subjectname}_delin.nii.gz output/jacobians/overall/secondlevel_{subjectname}_delin.nii.gz 1 1"
+                f"CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel/{subjectname}_delin.nii.gz "
+                f"output/jacobians/overall/secondlevel_{subjectname}_delin.nii.gz 1 1"
             )
             commands.append(
-                f"CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel/{subjectname}_affine.nii.gz output/jacobians/overall/secondlevel_{subjectname}_affine.nii.gz 1 1"
+                f"CreateJacobianDeterminantImage 3 output/compositewarps/secondlevel/{subjectname}_affine.nii.gz "
+                f"output/jacobians/overall/secondlevel_{subjectname}_affine.nii.gz 1 1"
             )
 
             pool.map(lambda x: run_command(x, args.dry_run, args.verbose), commands)
             commands = list()
 
             commands.append(
-                f"ImageMath 3 output/jacobians/overall/secondlevel_{subjectname}_relative.nii.gz + output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz output/jacobians/overall/secondlevel_{subjectname}_delin.nii.gz"
+                f"ImageMath 3 output/jacobians/overall/secondlevel_{subjectname}_relative.nii.gz "
+                f"+ output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz "
+                f"output/jacobians/overall/secondlevel_{subjectname}_delin.nii.gz"
             )
             commands.append(
-                f"ImageMath 3 output/jacobians/overall/secondlevel_{subjectname}_absolute.nii.gz + output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz output/jacobians/overall/secondlevel_{subjectname}_affine.nii.gz"
+                f"ImageMath 3 output/jacobians/overall/secondlevel_{subjectname}_absolute.nii.gz "
+                f"+ output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz "
+                f"output/jacobians/overall/secondlevel_{subjectname}_affine.nii.gz"
             )
             pool.uimap(lambda x: run_command(x, args.dry_run, args.verbose), commands)
             commands = list()
@@ -377,16 +393,28 @@ def secondlevel(inputs, args, secondlevel=False):
             subjectname = pathlib.Path(subject).name.rsplit(".nii")[0]
             if not is_non_zero_file("output/jacobians/common_space/COMPLETE"):
                 commands.append(
-                    f"antsApplyTransforms -d 3 -i output/jacobians/overall/secondlevel_{subjectname}_relative.nii.gz -t output/secondlevel/template0_common_space_1Warp.nii.gz -t output/secondlevel/template0_common_space_0GenericAffine.mat "
-                    f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/secondlevel_{subjectname}_relative.nii.gz"
+                    f"antsApplyTransforms -d 3 --verbose "
+                    f"-i output/jacobians/overall/secondlevel_{subjectname}_relative.nii.gz "
+                    f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                    f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                    f"-r {args.resample_to_common_space} "
+                    f"-o output/jacobians/common_space/secondlevel_{subjectname}_relative.nii.gz"
                 )
                 commands.append(
-                    f"antsApplyTransforms -d 3 -i output/jacobians/overall/secondlevel_{subjectname}_absolute.nii.gz -t output/secondlevel/template0_common_space_1Warp.nii.gz -t output/secondlevel/template0_common_space_0GenericAffine.mat "
-                    f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/secondlevel_{subjectname}_absolute.nii.gz"
+                    f"antsApplyTransforms -d 3 --verbose "
+                    f"-i output/jacobians/overall/secondlevel_{subjectname}_absolute.nii.gz "
+                    f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                    f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                    f"-r {args.resample_to_common_space} "
+                    f"-o output/jacobians/common_space/secondlevel_{subjectname}_absolute.nii.gz"
                 )
                 commands.append(
-                    f"antsApplyTransforms -d 3 -i output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz -t output/secondlevel/template0_common_space_1Warp.nii.gz -t output/secondlevel/template0_common_space_0GenericAffine.mat "
-                    f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/secondlevel_{subjectname}_nlin.nii.gz"
+                    f"antsApplyTransforms -d 3 --verbose "
+                    f"-i output/jacobians/overall/secondlevel_{subjectname}_nlin.nii.gz "
+                    f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                    f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                    f"-r {args.resample_to_common_space} "
+                    f"-o output/jacobians/common_space/secondlevel_{subjectname}_nlin.nii.gz"
                 )
 
                 pool.uimap(
@@ -422,7 +450,8 @@ def secondlevel(inputs, args, secondlevel=False):
             if not is_non_zero_file("output/jacobians/resampled/COMPLETE"):
                 # Make a mask per subject
                 run_command(
-                    f"ThresholdImage 3 output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz output/subject{subjectnum}/subject{subjectnum}_otsumask.nii.gz Otsu 1",
+                    f"ThresholdImage 3 output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz "
+                    f"output/subject{subjectnum}/subject{subjectnum}_otsumask.nii.gz Otsu 1",
                     args.dry_run,
                     args.verbose,
                 )
@@ -431,19 +460,25 @@ def secondlevel(inputs, args, secondlevel=False):
                     scanname = pathlib.Path(scan).name.rsplit(".nii")[0]
                     # Estimate affine residual from nonlinear and create composite warp and jacobian field
                     run_command(
-                        f"ANTSUseDeformationFieldToGetAffineTransform output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}1InverseWarp.nii.gz 0.25 "
-                        f"affine output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.mat output/subject{subjectnum}/subject{subjectnum}_otsumask.nii.gz",
+                        f"ANTSUseDeformationFieldToGetAffineTransform "
+                        f"output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}1InverseWarp.nii.gz 0.25 "
+                        f"affine output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.mat "
+                        f"output/subject{subjectnum}/subject{subjectnum}_otsumask.nii.gz",
                         args.dry_run,
                         args.verbose,
                     )
                     commands.append(
-                        f"antsApplyTransforms -d 3 -t [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.mat,1] -r output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz "
-                        f"--verbose -o [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz,1]"
+                        f"antsApplyTransforms -d 3 --verbose "
+                        f"-t [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.mat,1] "
+                        f"-r output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz "
+                        f"-o [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz,1]"
                     )
                     # Create composite warp field from affine
                     commands.append(
-                        f"antsApplyTransforms -d 3 -t [output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}0GenericAffine.mat,1] -r output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz "
-                        f"--verbose -o [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz,1]"
+                        f"antsApplyTransforms -d 3 --verbose "
+                        f"-t [output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}0GenericAffine.mat,1] "
+                        f"-r output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz "
+                        f"-o [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz,1]"
                     )
 
                     pool.map(
@@ -453,13 +488,16 @@ def secondlevel(inputs, args, secondlevel=False):
 
                     # Create jacobian images from nlin and composite warp fields
                     commands.append(
-                        f"CreateJacobianDeterminantImage 3 output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}1Warp.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz 1 1"
+                        f"CreateJacobianDeterminantImage 3 output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}1Warp.nii.gz "
+                        f"output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz 1 1"
                     )
                     commands.append(
-                        f"CreateJacobianDeterminantImage 3 output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz 1 1"
+                        f"CreateJacobianDeterminantImage 3 output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz "
+                        f"output/jacobians/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz 1 1"
                     )
                     commands.append(
-                        f"CreateJacobianDeterminantImage 3 output/compositewarps/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz 1 1"
+                        f"CreateJacobianDeterminantImage 3 output/compositewarps/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz "
+                        f"output/jacobians/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz 1 1"
                     )
 
                     pool.map(
@@ -469,10 +507,14 @@ def secondlevel(inputs, args, secondlevel=False):
 
                     # Create relative and absolute jacobians by adding affine/delin jacobians
                     commands.append(
-                        f"ImageMath 3 output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz + output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz"
+                        f"ImageMath 3 output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz "
+                        f"+ output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz "
+                        f"output/jacobians/groupwise/subject{subjectnum}_{scanname}_delin.nii.gz"
                     )
                     commands.append(
-                        f"ImageMath 3 output/jacobians/groupwise/subject{subjectnum}_{scanname}_absolute.nii.gz + output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz output/jacobians/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz"
+                        f"ImageMath 3 output/jacobians/groupwise/subject{subjectnum}_{scanname}_absolute.nii.gz "
+                        f"+ output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz "
+                        f"output/jacobians/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz"
                     )
 
                     pool.map(
@@ -482,31 +524,61 @@ def secondlevel(inputs, args, secondlevel=False):
 
                     # Resample jacobian to common space
                     commands.append(
-                        f"antsApplyTransforms -d 3 -i output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
-                        f"-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/jacobians/resampled/subject{subjectnum}_{scanname}_relative.nii.gz"
+                        f"antsApplyTransforms -d 3 --verbose "
+                        f"-i output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz "
+                        f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz "
+                        f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
+                        f"-r output/secondlevel/secondlevel_template0.nii.gz "
+                        f"-o output/jacobians/resampled/subject{subjectnum}_{scanname}_relative.nii.gz"
                     )
                     commands.append(
-                        f"antsApplyTransforms -d 3 -i output/jacobians/groupwise/subject{subjectnum}_{scanname}_absolute.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
-                        f"-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/jacobians/resampled/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                        f"antsApplyTransforms -d 3 --verbose "
+                        f"-i output/jacobians/groupwise/subject{subjectnum}_{scanname}_absolute.nii.gz "
+                        f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz "
+                        f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
+                        f"-r output/secondlevel/secondlevel_template0.nii.gz "
+                        f"-o output/jacobians/resampled/subject{subjectnum}_{scanname}_absolute.nii.gz"
                     )
                     commands.append(
-                        f"antsApplyTransforms -d 3 -i output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
-                        f"-r output/secondlevel/secondlevel_template0.nii.gz --verbose -o output/jacobians/resampled/subject{subjectnum}_{scanname}_nlin.nii.gz"
+                        f"antsApplyTransforms -d 3 --verbose "
+                        f"-i output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz "
+                        f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz "
+                        f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
+                        f"-r output/secondlevel/secondlevel_template0.nii.gz "
+                        f"-o output/jacobians/resampled/subject{subjectnum}_{scanname}_nlin.nii.gz"
                     )
 
                     if args.resample_to_common_space:
                         mkdirp("output/jacobians/common_space", args.dry_run)
                         commands.append(
-                            f"antsApplyTransforms -d 3 -i output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz -t output/secondlevel/template0_common_space_1Warp.nii.gz -t output/secondlevel/template0_common_space_0GenericAffine.mat -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
-                            f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/subject{subjectnum}_{scanname}_relative.nii.gz"
+                            f"antsApplyTransforms -d 3 --verbose "
+                            f"-i output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                            f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz "
+                            f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
+                            f"-r {args.resample_to_common_space} "
+                            f"-o output/jacobians/common_space/subject{subjectnum}_{scanname}_relative.nii.gz"
                         )
                         commands.append(
-                            f"antsApplyTransforms -d 3 -i output/jacobians/groupwise/subject{subjectnum}_{scanname}_absolute.nii.gz -t output/secondlevel/template0_common_space_1Warp.nii.gz -t output/secondlevel/template0_common_space_0GenericAffine.mat -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
-                            f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                            f"antsApplyTransforms -d 3 --verbose "
+                            f"-i output/jacobians/groupwise/subject{subjectnum}_{scanname}_absolute.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                            f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz "
+                            f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
+                            f"-r {args.resample_to_common_space} "
+                            f"-o output/jacobians/common_space/subject{subjectnum}_{scanname}_absolute.nii.gz"
                         )
                         commands.append(
-                            f"antsApplyTransforms -d 3 -i output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz -t output/secondlevel/template0_common_space_1Warp.nii.gz -t output/secondlevel/template0_common_space_0GenericAffine.mat -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
-                            f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/subject{subjectnum}_{scanname}_nlin.nii.gz"
+                            f"antsApplyTransforms -d 3 --verbose "
+                            f"-i output/jacobians/groupwise/subject{subjectnum}_{scanname}_nlin.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                            f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz "
+                            f"-t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
+                            f"-r {args.resample_to_common_space} "
+                            f"-o output/jacobians/common_space/subject{subjectnum}_{scanname}_nlin.nii.gz"
                         )
 
                     pool.uimap(
