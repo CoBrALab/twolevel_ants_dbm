@@ -77,8 +77,7 @@ def setup_and_check_inputs(inputs, args):
         for file in row:
             if not is_non_zero_file(file):
                 sys.exit(
-                    f"twolevel_dbm error: File {file} does "
-                    + "not exist or is zero size"
+                    f"twolevel_dbm error: File {file} does not exist or is zero size"
                 )
     if args.resample_to_common_space and (
         not is_non_zero_file(args.resample_to_common_space)
@@ -87,6 +86,24 @@ def setup_and_check_inputs(inputs, args):
             f"twolevel_dbm error: File {args.resample_to_common_space} does "
             "not exist or is zero size"
         )
+
+    # Check if multiple columns and 1level set
+    if args.type == "1level":
+        for row in inputs:
+            if len(row) > 1:
+                print(
+                    "twolevel_dbm warning: 1 level modelbuild specified but multiple "
+                    "columns detected in input csv"
+                )
+    # Warn about rows with single items in 2 level builds
+    if args.type == "2level":
+        for row in inputs:
+            if len(row) == 1:
+                print(
+                    "twolevel_dbm warning: 2 level modelbuild specified but row with "
+                    "single scan provided, subject will only have overall "
+                    "jacobains"
+                )
 
     # Find minimum resolution of input files unless blurs are set, or rigid
     # model is provided
