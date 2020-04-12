@@ -18,9 +18,9 @@ def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
 
 
-def run_command(command, dryrun, verbose=False):
+def run_command(command, dryrun=False, verbose=False):
     if dryrun:
-        print(command)
+        print(f"twolevel_dbm.py: would run command: {command}")
         fakereturn = subprocess.CompletedProcess
         fakereturn.stdout = "".encode()
         return fakereturn
@@ -37,17 +37,19 @@ def run_command(command, dryrun, verbose=False):
         return result
 
 
-def mkdirp(*p):
+def mkdirp(p, dryrun=False):
     """Like mkdir -p"""
-    path = os.path.join(*p)
-
-    try:
-        os.makedirs(path)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST:
-            pass
-        else:
-            raise
+    path = os.path.join(p)
+    if dryrun:
+        print(f"twolevel_dbm.py: would run mkdir -p {path}")
+    else:
+        try:
+            os.makedirs(path)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST:
+                pass
+            else:
+                raise
     return path
 
 
@@ -111,6 +113,7 @@ def setup_and_check_inputs(inputs, args):
         if args.rigid_model_target:
             if args.dry_run:
                 run_command(f"PrintHeader {args.rigid_model_target} 1", args.dry_run)
+                args.jacobian_sigmas = [0]
             else:
                 args.jacobian_sigmas = [
                     2.0
@@ -136,6 +139,7 @@ def setup_and_check_inputs(inputs, args):
                 for file in row:
                     if args.dry_run:
                         run_command(f"PrintHeader {file} 1", args.dry_run)
+                        minres = 0
                     else:
                         curres = min(
                             map(
@@ -259,8 +263,8 @@ def secondlevel(inputs, args, secondlevel=False):
         print("Skipping generation of DBM outputs")
         sys.exit()
 
-    mkdirp("output/jacobians/overall")
-    mkdirp("output/compositewarps/secondlevel")
+    mkdirp("output/jacobians/overall", args.dry_run)
+    mkdirp("output/compositewarps/secondlevel", args.dry_run)
     # Create mask for delin
     run_command(
         "ThresholdImage 3 output/secondlevel/secondlevel_template0.nii.gz output/secondlevel/secondlevel_otsumask.nii.gz Otsu 1",
@@ -346,7 +350,7 @@ def secondlevel(inputs, args, secondlevel=False):
     run_command("echo DONE > output/compositewarps/secondlevel/COMPLETE", args.dry_run)
 
     if not secondlevel and args.resample_to_common_space:
-        mkdirp("output/jacobians/common_space")
+        mkdirp("output/jacobians/common_space", args.dry_run)
         for i, subject in enumerate(tqdm.tqdm(input_images), start=0):
             subjectname = pathlib.Path(subject).name.rsplit(".nii")[0]
             if not is_non_zero_file("output/jacobians/common_space/COMPLETE"):
@@ -380,10 +384,10 @@ def secondlevel(inputs, args, secondlevel=False):
         run_command("echo DONE > output/jacobians/common_space/COMPLETE", args.dry_run)
 
     if secondlevel:
-        mkdirp("output/compositewarps/groupwise")
-        mkdirp("output/jacobians/resampled")
-        mkdirp("output/jacobians/groupwise")
         print("Processing First-Level DBM Outputs")
+        mkdirp("output/compositewarps/groupwise", args.dry_run)
+        mkdirp("output/jacobians/resampled", args.dry_run)
+        mkdirp("output/jacobians/groupwise", args.dry_run)
         for subjectnum, row in enumerate(
             tqdm.tqdm([line[:-1] for line in inputs]), start=0
         ):
@@ -455,7 +459,7 @@ def secondlevel(inputs, args, secondlevel=False):
                     )
 
                     if args.resample_to_common_space:
-                        mkdirp("output/jacobians/common_space")
+                        mkdirp("output/jacobians/common_space", args.dry_run)
                         commands.append(
                             f"antsApplyTransforms -d 3 -i output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz -t output/secondlevel/template0_common_space_1Warp.nii.gz -t output/secondlevel/template0_common_space_0GenericAffine.mat -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}1Warp.nii.gz -t output/secondlevel/secondlevel_subject{subjectnum}_template0{subjectnum}0GenericAffine.mat "
                             f"-r {args.resample_to_common_space} --verbose -o output/jacobians/common_space/subject{subjectnum}_{scanname}_relative.nii.gz"
