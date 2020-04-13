@@ -22,7 +22,7 @@ def run_command(command, dryrun=False, verbose=False):
     if dryrun:
         print(f"twolevel_dbm.py: would run command: {command}")
         fakereturn = subprocess.CompletedProcess
-        fakereturn.stdout = "".encode()
+        fakereturn.stdout = b""
         return fakereturn
     else:
         if verbose:
@@ -54,9 +54,10 @@ def mkdirp(p, dryrun=False):
 
 
 def which(program):
-    # Check for existence of important programs
-    # Stolen from
-    # http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python # noqa
+    """Check for existence of important programs"""
+    """Stolen from"""
+    """http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python"""
+
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -206,12 +207,7 @@ def firstlevel(inputs, args):
     # Here we should add the ability to limit the number of commands submitted
     results = list()
     if len(commands) > 0:
-        if args.cluster_type != 0:
-            pool = threading.ThreadPool(
-                nodes=min(len(commands), threading.cpu_count() // 2)
-            )
-        else:
-            pool = threading.ThreadPool(nodes=args.local_threads)
+        pool = threading.ThreadPool(nodes=args.local_threads)
 
         print(f"twolevel_dbm.py: Running {len(commands)} First-Level Modelbuilds")
         for item in tqdm.tqdm(
