@@ -175,31 +175,46 @@ def firstlevel(inputs, args):
     imagelist = list()
     for i, subject in enumerate(inputs, start=0):
         if not is_non_zero_file(f"output/subject{i}/COMPLETE"):
-            # Base command
-            command = f"{args.modelbuild_command} -d 3 "
-            # Setup directory and naming
-            command += f"-o output/subject{i}/subject{i}_ "
-            # Defaults to bootstrap modelbuilds with rigid prealignmnet,
-            # no rigid update
-            command += "-r 1 -l 1 -y 0 "
-            # Model build setup
-            command += (
-                f"-c {args.cluster_type} -a {args.average_type} "
-                f"-e {args.float} -g {args.gradient_step} "
-                f"-i {args.model_iterations} -n {int(args.N4)} "
-                f"-m {args.metric} -t {args.transform} "
-                f"-u {args.walltime} -v {args.memory_request} "
-            )
-            # Registrations Setup
-            command += (
-                f"-q {args.reg_iterations} "
-                f"-f {args.reg_shrinks} "
-                f"-s {args.reg_smoothing} "
-            )
+            if len(subject) == 1:
+                subjectname = pathlib.Path(subject[0]).name.rsplit(".nii")[0]
+                command = f"mkdir -p output/subject{i} && cp {subject[0]} output/subject{i}/subject{i}_template0.nii.gz "
+                command += f"&& ImageMath 3 output/subject{i}/subject{i}_{subjectname}00GenericAffine.mat MakeAffineTransform 1 "
+                command += f"&& CreateImage 3 {subject[0]} output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz 1 "
+                command += (
+                    "&& CreateDisplacementField 3 1 "
+                    + (f"output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz " * 3)
+                    + f"output/subject{i}/subject{i}_{subjectname}01InverseWarp.nii.gz "
+                )
+                command += "&& CreateDisplacementField 3 1 " + (
+                    f"output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz " * 4
+                )
+            else:
+                # Base command
+                command = f"{args.modelbuild_command} -d 3 "
+                # Setup directory and naming
+                command += f"-o output/subject{i}/subject{i}_ "
+                # Defaults to bootstrap modelbuilds with rigid prealignmnet,
+                # no rigid update
+                command += "-r 1 -l 1 -y 0 "
+                # Model build setup
+                command += (
+                    f"-c {args.cluster_type} -a {args.average_type} "
+                    f"-e {args.float} -g {args.gradient_step} "
+                    f"-i {args.model_iterations} -n {int(args.N4)} "
+                    f"-m {args.metric} -t {args.transform} "
+                    f"-u {args.walltime} -v {args.memory_request} "
+                )
+                # Registrations Setup
+                command += (
+                    f"-q {args.reg_iterations} "
+                    f"-f {args.reg_shrinks} "
+                    f"-s {args.reg_smoothing} "
+                )
 
-            if args.rigid_model_target:
-                command += f"-z {args.rigid_model_target} "
-            command += " ".join(subject)
+                if args.rigid_model_target:
+                    command += f"-z {args.rigid_model_target} "
+                command += " ".join(subject)
+
             command += f" && echo DONE > output/subject{i}/COMPLETE"
             commands.append(command)
 
