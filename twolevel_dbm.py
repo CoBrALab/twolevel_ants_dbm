@@ -177,10 +177,11 @@ def firstlevel(inputs, args):
         if not is_non_zero_file(f"output/subject{i}/COMPLETE"):
             if len(subject) == 1:
                 subjectname = pathlib.Path(subject[0]).name.rsplit(".nii")[0]
-                command = f"mkdir -p output/subject{i} && cp {subject[0]} output/subject{i}/subject{i}_template0.nii.gz "
-                command += f"&& ImageMath 3 output/subject{i}/subject{i}_{subjectname}00GenericAffine.mat MakeAffineTransform 1 "
-                command += f"&& CreateImage 3 {subject[0]} output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz 1 "
-                command += (
+                command = (
+                    f"mkdir -p output/subject{i} "
+                    f"&& cp {subject[0]} output/subject{i}/subject{i}_template0.nii.gz "
+                    f"&& ImageMath 3 output/subject{i}/subject{i}_{subjectname}00GenericAffine.mat MakeAffineTransform 1 "
+                    f"&& CreateImage 3 {subject[0]} output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz 1 "
                     "&& CreateDisplacementField 3 1 "
                     + (f"output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz " * 3)
                     + f"output/subject{i}/subject{i}_{subjectname}01InverseWarp.nii.gz "
