@@ -19,9 +19,12 @@ to the final unbiased space are produced.
 # Input
 
 Input is a csv-formatted file with with one input NIFTI file per row for 1 level
-model builds. For a 2 level modelbuild, each row can have 2 or more input files.
-Currently mixed level models (2 level modelbuilds where some rows have a single file)
-are not implemented.
+model builds.
+
+For a 2 level modelbuild, each row must have 2 or more input files. Mixed level
+modelbuilds are supported, where some (but not all) rows may have one file. In
+this case rows with a single file specified will be used in the second level
+model build, but have resampled first-level jacobians of unity.
 
 Suggested input files are skull-stripped preprocessed brains, such as those output
 by [CoBrALab/minc-bpipe-library](https://github.com/CobraLab/minc-bpipe-library).
