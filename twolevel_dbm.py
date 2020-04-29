@@ -598,26 +598,26 @@ def secondlevel(inputs, args, secondlevel=False):
                     )
                     commands = list()
 
-                # Append jacobians to list
-                jacobians.append(
-                    f"output/jacobians/resampled/subject{subjectnum}_{scanname}_relative.nii.gz"
-                )
-                jacobians.append(
-                    f"output/jacobians/resampled/subject{subjectnum}_{scanname}_absolute.nii.gz"
-                )
-                jacobians.append(
-                    f"output/jacobians/resampled/subject{subjectnum}_{scanname}_nlin.nii.gz"
-                )
-                if args.resample_to_common_space:
+                    # Append jacobians to list
                     jacobians.append(
-                        f"output/jacobians/common_space/subject{subjectnum}_{scanname}_relative.nii.gz"
+                        f"output/jacobians/resampled/subject{subjectnum}_{scanname}_relative.nii.gz"
                     )
                     jacobians.append(
-                        f"output/jacobians/common_space/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                        f"output/jacobians/resampled/subject{subjectnum}_{scanname}_absolute.nii.gz"
                     )
                     jacobians.append(
-                        f"output/jacobians/common_space/subject{subjectnum}_{scanname}_nlin.nii.gz"
+                        f"output/jacobians/resampled/subject{subjectnum}_{scanname}_nlin.nii.gz"
                     )
+                    if args.resample_to_common_space:
+                        jacobians.append(
+                            f"output/jacobians/common_space/subject{subjectnum}_{scanname}_relative.nii.gz"
+                        )
+                        jacobians.append(
+                            f"output/jacobians/common_space/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                        )
+                        jacobians.append(
+                            f"output/jacobians/common_space/subject{subjectnum}_{scanname}_nlin.nii.gz"
+                        )
         run_command(
             "echo DONE > output/jacobians/resampled/COMPLETE",
             args.dry_run,
