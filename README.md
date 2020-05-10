@@ -40,19 +40,26 @@ of the population random sampling of the underlying average anatomy.
 
 # Outputs
 
-``twolevel_dbm.py`` produces three types of jacobian determinant images from the
-model builds ``nlin``, ``relative`` and ``absolute``. ``nlin`` files are the
+``twolevel_dbm.py`` produces three types of log jacobian determinant images from the
+model builds: ``nlin``, ``relative`` and ``absolute``. ``nlin`` files are the
 raw registration warp fields converted to jacobians, ``relative`` files have
 residual affine components of the warp field removed using
 ``ANTSUseDeformationFieldToGetAffineTransform`` and ``absolute`` files have the
-affine jacobian added to account for bulk volume changes. ``relative`` and ``absolute``
-files are generally expected to be used for statistical analysis.
+affine jacobian added to the ``nlin`` to account for bulk volume changes.
+``relative`` and ``absolute`` files are generally expected to be used for
+statistical analysis.
 
 For two-level pipelines, jacobians are produced for two different transformations,
 ``resampled`` are within-subject jacobians, resampled into the final average
 anatomical space, ``overall`` are jacobains encoding all volumetric differences
 between the individual subject input files to the final anatomical average.
 For most applications the ``resampled`` jacobians are suggested for analysis.
+
+In all cases the values of the log jacobians are to be interpreted as follows:
+- positive values indicate that the voxel in template space must be expanded to
+get to the subject space, i.e. the subject voxel is larger than the template voxel
+- negative values indicate that the voxel in template space must be reduced
+to get to the subject space, i.e. the subject voxel is smaller than the template voxel
 
 # Interrupted Pipelines
 

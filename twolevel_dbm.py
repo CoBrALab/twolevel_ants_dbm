@@ -327,7 +327,7 @@ def secondlevel(inputs, args, secondlevel=False):
             # Compute delin
             run_command(
                 f"ANTSUseDeformationFieldToGetAffineTransform "
-                f"output/secondlevel/secondlevel_{subjectname}{i}1InverseWarp.nii.gz 0.25 "
+                f"output/secondlevel/secondlevel_{subjectname}{i}1Warp.nii.gz 0.25 "
                 f"affine output/compositewarps/secondlevel/{subjectname}_delin.mat "
                 f"output/secondlevel/secondlevel_otsumask.nii.gz",
                 args.dry_run,
@@ -345,7 +345,7 @@ def secondlevel(inputs, args, secondlevel=False):
             # Create composite field of affine
             commands.append(
                 f"antsApplyTransforms -d 3 --verbose "
-                f"-t [output/secondlevel/secondlevel_{subjectname}{i}0GenericAffine.mat,1] "
+                f"-t output/secondlevel/secondlevel_{subjectname}{i}0GenericAffine.mat "
                 f"-r output/secondlevel/secondlevel_template0.nii.gz "
                 f"-o [output/compositewarps/secondlevel/{subjectname}_affine.nii.gz,1]"
             )
@@ -473,7 +473,7 @@ def secondlevel(inputs, args, secondlevel=False):
                     # Estimate affine residual from nonlinear and create composite warp and jacobian field
                     run_command(
                         f"ANTSUseDeformationFieldToGetAffineTransform "
-                        f"output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}1InverseWarp.nii.gz 0.25 "
+                        f"output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}1Warp.nii.gz 0.25 "
                         f"affine output/compositewarps/groupwise/subject{subjectnum}_{scanname}_delin.mat "
                         f"output/subject{subjectnum}/subject{subjectnum}_otsumask.nii.gz",
                         args.dry_run,
@@ -488,7 +488,7 @@ def secondlevel(inputs, args, secondlevel=False):
                     # Create composite warp field from affine
                     commands.append(
                         f"antsApplyTransforms -d 3 --verbose "
-                        f"-t [output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}0GenericAffine.mat,1] "
+                        f"-t output/subject{subjectnum}/subject{subjectnum}_{scanname}{scannum}0GenericAffine.mat "
                         f"-r output/subject{subjectnum}/subject{subjectnum}_template0.nii.gz "
                         f"-o [output/compositewarps/groupwise/subject{subjectnum}_{scanname}_affine.nii.gz,1]"
                     )
