@@ -787,7 +787,7 @@ def main():
     )
     advanced.add_argument(
         "--model-iterations",
-        default=3,
+        default=4,
         type=int,
         help="How many registration and average rounds to do",
     )
