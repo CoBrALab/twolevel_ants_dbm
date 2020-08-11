@@ -560,8 +560,36 @@ def secondlevel(inputs, args, secondlevel=False):
                         f"-o output/jacobians/resampled/subject{subjectnum}_{scanname}_nlin.nii.gz"
                     )
 
+                    pool.uimap(
+                        lambda x: run_command(x, args.dry_run, args.verbose), commands
+                    )
+                    commands = list()
+
+                    commands.append(
+                        f"ImageMath 3 output/jacobians/overall/subject{subjectnum}_{scanname}_relative.nii.gz + "
+                        f"output/jacobians/resampled/subject{subjectnum}_{scanname}_relative.nii.gz "
+                        f"output/jacobians/overall/secondlevel_subject{subjectnum}_template0_relative.nii.gz"
+                    )
+
+                    commands.append(
+                        f"ImageMath 3 output/jacobians/overall/subject{subjectnum}_{scanname}_absolute.nii.gz + "
+                        f"output/jacobians/resampled/subject{subjectnum}_{scanname}_absolute.nii.gz "
+                        f"output/jacobians/overall/secondlevel_subject{subjectnum}_template0_absolute.nii.gz"
+                    )
+
+                    commands.append(
+                        f"ImageMath 3 output/jacobians/overall/subject{subjectnum}_{scanname}_nlin.nii.gz + "
+                        f"output/jacobians/resampled/subject{subjectnum}_{scanname}_nlin.nii.gz "
+                        f"output/jacobians/overall/secondlevel_subject{subjectnum}_template0_nlin.nii.gz"
+                    )
+
+                    pool.uimap(
+                        lambda x: run_command(x, args.dry_run, args.verbose), commands
+                    )
+                    commands = list()
+
                     if args.resample_to_common_space:
-                        mkdirp("output/jacobians/common_space", args.dry_run)
+                        mkdirp("output/jacobians/common_space/overall", args.dry_run)
                         commands.append(
                             f"antsApplyTransforms -d 3 --verbose "
                             f"-i output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz "
@@ -593,6 +621,31 @@ def secondlevel(inputs, args, secondlevel=False):
                             f"-o output/jacobians/common_space/subject{subjectnum}_{scanname}_nlin.nii.gz"
                         )
 
+                        commands.append(
+                            f"antsApplyTransforms -d 3 --verbose "
+                            f"-i output/jacobians/overall/subject{subjectnum}_{scanname}_relative.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                            f"-r {args.resample_to_common_space} "
+                            f"-o output/jacobians/common_space/overall/subject{subjectnum}_{scanname}_relative.nii.gz"
+                        )
+                        commands.append(
+                            f"antsApplyTransforms -d 3 --verbose "
+                            f"-i output/jacobians/overall/subject{subjectnum}_{scanname}_absolute.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                            f"-r {args.resample_to_common_space} "
+                            f"-o output/jacobians/common_space/overall/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                        )
+                        commands.append(
+                            f"antsApplyTransforms -d 3 --verbose "
+                            f"-i output/jacobians/overall/subject{subjectnum}_{scanname}_nlin.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_1Warp.nii.gz "
+                            f"-t output/secondlevel/template0_common_space_0GenericAffine.mat "
+                            f"-r {args.resample_to_common_space} "
+                            f"-o output/jacobians/common_space/overall/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                        )
+
                     pool.uimap(
                         lambda x: run_command(x, args.dry_run, args.verbose), commands
                     )
@@ -608,6 +661,17 @@ def secondlevel(inputs, args, secondlevel=False):
                     jacobians.append(
                         f"output/jacobians/resampled/subject{subjectnum}_{scanname}_nlin.nii.gz"
                     )
+
+                    jacobians.append(
+                        f"output/jacobians/overall/subject{subjectnum}_{scanname}_relative.nii.gz"
+                    )
+                    jacobians.append(
+                        f"output/jacobians/overall/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                    )
+                    jacobians.append(
+                        f"output/jacobians/overall/subject{subjectnum}_{scanname}_nlin.nii.gz"
+                    )
+
                     if args.resample_to_common_space:
                         jacobians.append(
                             f"output/jacobians/common_space/subject{subjectnum}_{scanname}_relative.nii.gz"
@@ -617,6 +681,15 @@ def secondlevel(inputs, args, secondlevel=False):
                         )
                         jacobians.append(
                             f"output/jacobians/common_space/subject{subjectnum}_{scanname}_nlin.nii.gz"
+                        )
+                        jacobians.append(
+                            f"output/jacobians/common_space/overall/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                        )
+                        jacobians.append(
+                            f"output/jacobians/common_space/overall/subject{subjectnum}_{scanname}_absolute.nii.gz"
+                        )
+                        jacobians.append(
+                            f"output/jacobians/common_space/overall/subject{subjectnum}_{scanname}_absolute.nii.gz"
                         )
         run_command(
             "echo DONE > output/jacobians/resampled/COMPLETE",
