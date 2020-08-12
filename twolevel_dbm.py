@@ -691,11 +691,6 @@ def secondlevel(inputs, args, secondlevel=False):
                         jacobians.append(
                             f"output/jacobians/common_space/overall/subject{subjectnum}_{scanname}_absolute.nii.gz"
                         )
-        run_command(
-            "echo DONE > output/jacobians/resampled/COMPLETE",
-            args.dry_run,
-            args.verbose,
-        )
 
     commands = list()
     print("twolevel_dbm.py: Blurring Jacobians")
@@ -712,6 +707,11 @@ def secondlevel(inputs, args, secondlevel=False):
 
     pool.close()
     pool.clear()
+    run_command(
+        "echo DONE > output/jacobians/resampled/COMPLETE",
+        args.dry_run,
+        args.verbose,
+    )
     print("twolevel_dbm.py: Pipeline Complete")
     sys.exit(0)
 
