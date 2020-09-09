@@ -276,7 +276,10 @@ def secondlevel(inputs, args, secondlevel=False):
         )
         if args.rigid_model_target:
             command += f"-z {args.rigid_model_target} "
-        command += " ".join(input_images)
+        if not secondlevel:
+          command += f"{args.input} "
+        else:
+          command += " ".join(input_images)
         command += " && echo DONE > output/secondlevel/COMPLETE"
         print("twolevel_dbm.py: Running Second-Level Modelbuild")
         results = run_command(command, args.dry_run, args.verbose)
