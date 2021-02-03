@@ -567,7 +567,7 @@ def secondlevel(inputs, args, secondlevel=False):
                         f"-o output/jacobians/resampled/subject{subjectnum}_{scanname}_nlin.nii.gz"
                     )
 
-                    pool.uimap(
+                    pool.map(
                         lambda x: run_command(x, args.dry_run, args.verbose), commands
                     )
                     commands = list()
