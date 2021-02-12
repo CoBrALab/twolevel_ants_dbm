@@ -247,6 +247,13 @@ def firstlevel(inputs, args):
 
 
 def secondlevel(inputs, args, secondlevel=False):
+    mkdirp("output/jacobians/overall", args.dry_run)
+    mkdirp("output/compositewarps/secondlevel", args.dry_run)
+    mkdirp("output/jacobians/common_space", args.dry_run)
+    mkdirp("output/compositewarps/groupwise", args.dry_run)
+    mkdirp("output/jacobians/resampled", args.dry_run)
+    mkdirp("output/jacobians/groupwise", args.dry_run)
+    mkdirp("output/jacobians/common_space/overall", args.dry_run)
     outputs = list()
     if secondlevel:
         input_images = [row[-1] for row in inputs]
@@ -296,8 +303,7 @@ def secondlevel(inputs, args, secondlevel=False):
         print("twolevel_dbm.py: Pipeline Complete")
         sys.exit(0)
 
-    mkdirp("output/jacobians/overall", args.dry_run)
-    mkdirp("output/compositewarps/secondlevel", args.dry_run)
+
     # Create mask for delin
     run_command(
         "ThresholdImage 3 output/secondlevel/secondlevel_template0.nii.gz "
@@ -407,7 +413,6 @@ def secondlevel(inputs, args, secondlevel=False):
     )
 
     if not secondlevel and args.resample_to_common_space:
-        mkdirp("output/jacobians/common_space", args.dry_run)
         for i, subject in enumerate(tqdm.tqdm(input_images), start=0):
             subjectname = pathlib.Path(subject).name.rsplit(".nii")[0]
             if not is_non_zero_file("output/jacobians/common_space/COMPLETE"):
@@ -459,9 +464,6 @@ def secondlevel(inputs, args, secondlevel=False):
         )
 
     if secondlevel:
-        mkdirp("output/compositewarps/groupwise", args.dry_run)
-        mkdirp("output/jacobians/resampled", args.dry_run)
-        mkdirp("output/jacobians/groupwise", args.dry_run)
         print("twolevel_dbm.py: Processing First-Level DBM Outputs")
         for subjectnum, row in enumerate(
             tqdm.tqdm([line[:-1] for line in inputs]), start=0
@@ -596,7 +598,6 @@ def secondlevel(inputs, args, secondlevel=False):
                     commands = list()
 
                     if args.resample_to_common_space:
-                        mkdirp("output/jacobians/common_space/overall", args.dry_run)
                         commands.append(
                             f"antsApplyTransforms -d 3 --verbose "
                             f"-i output/jacobians/groupwise/subject{subjectnum}_{scanname}_relative.nii.gz "
