@@ -888,7 +888,7 @@ def main():
     )
     cluster.add_argument(
         "--walltime",
-        default="20:00:00",
+        default="4:00:00",
         help="""Option for job submission
         specifying requested time per pairwise registration.""",
     )
