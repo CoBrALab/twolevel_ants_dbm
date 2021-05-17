@@ -18,7 +18,7 @@ to the final unbiased space are produced.
 
 # Input
 
-Input is a csv-formatted file with with one input NIFTI file per row for 1 level
+Input is a csv-formatted file with one input NIFTI file per row for 1 level
 model builds.
 
 For a 2 level modelbuild, each row must have 2 or more input files. Mixed level
