@@ -18,7 +18,7 @@ to the final unbiased space are produced.
 
 # Input
 
-Input is a csv-formatted file with with one input NIFTI file per row for 1 level
+Input is a csv-formatted file with one input NIFTI file per row for 1 level
 model builds.
 
 For a 2 level modelbuild, each row must have 2 or more input files. Mixed level
@@ -30,6 +30,8 @@ Suggested input files are skull-stripped preprocessed brains, such as those outp
 by [CoBrALab/minc-bpipe-library](https://github.com/CobraLab/minc-bpipe-library).
 Skull stripped files produce better initial affine matches during registration and
 provide stronger features to SyN registration stages compared to unstripped files.
+
+(example input can be found in folder test/)
 
 ## Configuration
 
@@ -84,6 +86,8 @@ or install ANTs version https://github.com/ANTsX/ANTs/commit/412bb8fef534c0e9b6c
 or newer.
 
 # Full help
+
+(update required since some new options are not presented below)
 
 ```
 usage: twolevel_dbm.py [-h]
