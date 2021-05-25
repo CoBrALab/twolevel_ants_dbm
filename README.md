@@ -31,6 +31,8 @@ by [CoBrALab/minc-bpipe-library](https://github.com/CobraLab/minc-bpipe-library)
 Skull stripped files produce better initial affine matches during registration and
 provide stronger features to SyN registration stages compared to unstripped files.
 
+(example input can be found in folder test/)
+
 ## Configuration
 
 Suggested configuration is to use a ``--rigid-model-target``, typically an MNI model,
@@ -84,6 +86,8 @@ or install ANTs version https://github.com/ANTsX/ANTs/commit/412bb8fef534c0e9b6c
 or newer.
 
 # Full help
+
+(update required since some new options are not presented below)
 
 ```
 usage: twolevel_dbm.py [-h]
