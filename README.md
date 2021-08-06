@@ -90,7 +90,7 @@ usage: twolevel_dbm.py [-h]
                        [--jacobian-sigmas JACOBIAN_SIGMAS [JACOBIAN_SIGMAS ...]]
                        [--rigid-model-target RIGID_MODEL_TARGET]
                        [--resample-to-common-space RESAMPLE_TO_COMMON_SPACE]
-                       [--skip-dbm] [--dry-run] [--N4] [--metric METRIC]
+                       [--skip-dbm] [--dry-run] [-v] [--N4] [--metric METRIC]
                        [--transform {SyN,BSplineSyN,TimeVaryingVelocityField,TimeVaryingBSplineVelocityField,Affine,Rigid}]
                        [--reg-iterations REG_ITERATIONS]
                        [--reg-smoothing REG_SMOOTHING]
@@ -123,8 +123,8 @@ optional arguments:
   -h, --help            show this help message and exit
   --jacobian-sigmas JACOBIAN_SIGMAS [JACOBIAN_SIGMAS ...]
                         List of smoothing sigmas used for final output,
-                        defaults to 2x finest resolution input file or rigid
-                        model target if provided. (default: None)
+                        defaults to FWHM of 2x finest resolution input file or
+                        rigid model target if provided. (default: None)
   --rigid-model-target RIGID_MODEL_TARGET
                         Target file to use for rigid registration of the
                         second level, otherwise unbiased average to start
@@ -137,6 +137,7 @@ optional arguments:
   --skip-dbm            Skip generating DBM outputs (default: False)
   --dry-run             Don't run commands, instead print to stdout (default:
                         False)
+  -v, --verbose         Be verbose about what is going on (default: False)
 
 advanced options:
   --N4, --no-N4         Run N4BiasFieldCorrection during model build on input
@@ -165,7 +166,7 @@ advanced options:
                         build (default: 0.25)
   --model-iterations MODEL_ITERATIONS
                         How many registration and average rounds to do
-                        (default: 3)
+                        (default: 4)
   --modelbuild-command MODELBUILD_COMMAND
                         Command to use for performing model build, must accept
                         same arguments as
@@ -177,12 +178,13 @@ cluster options:
                         Choose the type of cluster system to submit jobs to
                         (default: local)
   --walltime WALLTIME   Option for job submission specifying requested time
-                        per pairwise registration. (default: 20:00:00)
+                        per pairwise registration. (default: 4:00:00)
   --memory-request MEMORY_REQUEST
                         Option for job submission specifying requested memory
                         per pairwise registration. (default: 8gb)
   --local-threads LOCAL_THREADS, -j LOCAL_THREADS
                         For local execution, how many subject-wise modelbuilds
                         to run in parallel, defaults to number of CPUs
-                        (default: 4)
+                        (default: 20)
+
 ```
