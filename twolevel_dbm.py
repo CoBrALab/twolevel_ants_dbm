@@ -13,6 +13,9 @@ import math
 import pathos.threading as threading  # Better multiprocessing
 import tqdm  # Progress bar
 
+import functools
+print = functools.partial(print, flush=True)
+
 
 def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
