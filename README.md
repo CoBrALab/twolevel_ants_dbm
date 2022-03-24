@@ -55,6 +55,8 @@ anatomical space, ``overall`` are jacobains encoding all volumetric differences
 between the individual subject input files to the final anatomical average.
 For most applications the ``resampled`` jacobians are suggested for analysis.
 
+For one-level pipelines, only ``overall`` jacobians are produced.
+
 In all cases the values of the log jacobians are to be interpreted as follows:
 - positive values indicate that the voxel in template space must be expanded to
 get to the subject space, i.e. the subject voxel is larger than the template voxel
