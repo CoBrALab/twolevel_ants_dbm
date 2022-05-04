@@ -188,8 +188,8 @@ def firstlevel(inputs, args):
                     f"mkdir -p output/subject{i} "
                     f"&& cp {subject[0]} output/subject{i}/subject{i}_template0.nii.gz "
                     f"&& ImageMath 3 output/subject{i}/subject{i}_{subjectname}00GenericAffine.mat MakeAffineTransform 1 "
-                    f"&& CreateImage 3 {subject[0]} output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz 1 "
-                    "&& CreateDisplacementField 3 1 "
+                    f"&& CreateImage 3 {subject[0]} output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz 0 "
+                    "&& CreateDisplacementField 3 0 "
                     + (f"output/subject{i}/subject{i}_{subjectname}01Warp.nii.gz " * 3)
                     + f"output/subject{i}/subject{i}_{subjectname}01InverseWarp.nii.gz "
                 )
