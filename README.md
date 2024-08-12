@@ -1,6 +1,3 @@
-# This project is depreciated in favour of https://github.com/CoBrALab/optimized_antsMultivariateTemplateConstruction
-
-
 Two Level DBM
 ----------------
 
