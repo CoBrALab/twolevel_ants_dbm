@@ -1,3 +1,13 @@
+# Next Generation Pipeline Development!
+
+While this pipeline is fully functional, the underlying antsMultivariateTemplateConstruction2.sh
+has limitations in its flexibility. As such, this entire pipeline was rewritten from scratch
+along with lots of new features added.
+
+Please see
+https://github.com/CoBrALab/optimized_antsMultivariateTemplateConstruction
+
+
 Two Level DBM
 ----------------
 
