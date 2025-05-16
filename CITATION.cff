@@ -1,0 +1,43 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: twolevel_ants_dbm
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Gabriel
+    name-particle: A
+    family-names: Devenyi
+    email: gdevenyi@gmail.com
+    affiliation: McGill University
+    orcid: 'https://orcid.org/0000-0002-7766-1187'
+repository-code: 'https://github.com/CoBrALab/twolevel_ants_dbm'
+abstract: >-
+  This is a python pipeline which wraps around the
+  antsMultivariateTemplateConstruction2.sh tool from
+  ANTsX/ANTs to produce unbiased produce deformation based
+  morphomometry outputs for statistical analysis for both
+  cross-sectional (1 level) and longitudinal (2 level)
+  populations.
+commit: c2fa23d3343affbbe4a033339c8a784995530a2e
+version: '1.0'
+date-released: '2024-04-15'
+
+preferred-citation:
+  authors:
+    - family-names: Germann
+      given-names: J
+    - family-names: Gouveia
+      given-names: FV
+    - family-names: Chakravarty
+      given-names: MM
+    - family-names: Devenyi
+      given-names: GA
+  title: "Longitudinal deformation-based morphometry pipeline to study neuroanatomical differences in structural MRI based on SyN unbiased templates."
+  doi: 10.52294/001c.133510
+  journal: "Aperture Neuro"
+  type: article
+  year: 2025
